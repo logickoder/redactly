@@ -51,13 +51,25 @@ The primary goal is to create a Progressive Web App (PWA) that operates **100% o
 
 ## **4\. Design and UX Specifications**
 
-### **4.1 Color Scheme (Dark Mode)**
+### 4.1 Color Scheme (Light & Dark Mode)
 
-* **Primary Accent:** \#075E54 (WhatsApp Green)
-* **Secondary Accent:** \#DCF8C6 (Light Highlights)
-* **Background:** \#1D2633 (Charcoal Gray)
-* **Card BG:** \#2C3E50 (Dark Gray)
-* **Text:** \#ECF0F1 (Off-White)
+**Light Mode:**
+
+* **Primary:** #2563EB (Blue 600)
+* **Secondary:** #10B981 (Emerald 500)
+* **Background:** #F8FAFC (Slate 50)
+* **Card BG:** #FFFFFF (White)
+* **Text:** #0F172A (Slate 900)
+* **Text Muted:** #64748B (Slate 500)
+
+**Dark Mode:**
+
+* **Primary:** #3B82F6 (Blue 500)
+* **Secondary:** #34D399 (Emerald 400)
+* **Background:** #0F172A (Slate 900)
+* **Card BG:** #1E293B (Slate 800)
+* **Text:** #F1F5F9 (Slate 100)
+* **Text Muted:** #94A3B8 (Slate 400)
 
 ### **4.2 Layout**
 
