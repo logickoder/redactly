@@ -1,8 +1,7 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
@@ -12,7 +11,8 @@ export default defineConfig({
       manifest: {
         name: 'Redactly',
         short_name: 'Redactly',
-        description: 'A simple, secure, client-side tool for users to prepare sensitive WhatsApp chat data for external analysis',
+        description:
+          'A simple, secure, client-side tool for users to prepare sensitive WhatsApp chat data for external analysis',
         theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',
@@ -39,5 +39,5 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg}']
       }
     })
-  ],
-})
+  ]
+});

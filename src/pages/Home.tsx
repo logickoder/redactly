@@ -1,7 +1,18 @@
-import { type FC } from 'react';
+import { type ChangeEvent, type FC } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Download, FileText, Settings, ShieldCheck, Upload } from 'lucide-react';
 
 const Home: FC = () => {
+  const navigate = useNavigate();
+
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const text = await file.text();
+    navigate('/redact', { state: { fileContent: text } });
+  };
+
   return (
     <div className="flex flex-col items-center p-4 sm:p-8 max-w-7xl mx-auto">
       {/* Hero Section */}
@@ -63,7 +74,7 @@ const Home: FC = () => {
         <div className="absolute top-0 left-0 w-full h-2 bg-linear-to-r from-primary to-secondary"></div>
         <h2 className="text-3xl font-bold mb-8 text-text">Ready to start?</h2>
 
-        <div className="border-3 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-12 hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all cursor-pointer group">
+        <label className="border-3 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-12 hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all cursor-pointer group block">
           <div className="flex flex-col items-center">
             <Upload className="h-16 w-16 text-gray-400 group-hover:text-primary mb-6 transition-colors" />
             <p className="text-xl font-medium text-text group-hover:text-primary transition-colors">
@@ -71,7 +82,16 @@ const Home: FC = () => {
             </p>
             <p className="text-sm text-text-muted mt-3">or drag and drop here</p>
           </div>
-          <input type="file" className="hidden" accept=".txt" />
+          <input type="file" className="hidden" accept=".txt" onChange={handleFileUpload} />
+        </label>
+
+        <div className="mt-6">
+          <button
+            onClick={() => navigate('/redact')}
+            className="text-primary hover:underline font-medium text-lg"
+          >
+            Or paste conversation text directly
+          </button>
         </div>
       </section>
     </div>
