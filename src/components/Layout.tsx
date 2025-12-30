@@ -5,6 +5,7 @@ import Github from '../assets/github.svg';
 import Twitter from '../assets/x.svg';
 import { ReactSVG } from 'react-svg';
 import { useAppStore } from '../store/useAppStore.ts';
+import SEO from './SEO';
 
 const Layout: FC = () => {
   const iconClass = 'w-5 h-5 text-text-muted';
@@ -20,6 +21,7 @@ const Layout: FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col font-sans">
+      <SEO />
       <nav className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-card/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-center sm:justify-between h-24 sm:h-16 items-center">
