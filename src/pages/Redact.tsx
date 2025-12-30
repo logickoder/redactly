@@ -12,6 +12,7 @@ import {
   User
 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const Redact: FC = () => {
   const location = useLocation();
@@ -99,8 +100,7 @@ const Redact: FC = () => {
         return !(end && msg.date > end);
       })
       .map((msg) => {
-        const line = msg.originalString;
-        let redactedLine = line;
+        let redactedLine = msg.originalString;
 
         // Apply all aliases to the line
         Object.entries(aliases).forEach(([name, aliasName]) => {
@@ -159,24 +159,29 @@ const Redact: FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-8">
+    <motion.div
+      className="max-w-7xl mx-auto p-4 sm:p-8"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-text">Redact Chat</h1>
         <div className="flex items-center space-x-2 text-sm">
           <span
-            className={`px-3 py-1 rounded-full ${step === 1 ? 'bg-primary text-white' : 'bg-gray-200 dark:bg-gray-800 text-text-muted'}`}
+            className={`px-3 py-1 rounded-full transition-colors duration-300 ${step === 1 ? 'bg-primary text-white' : 'bg-gray-200 dark:bg-gray-800 text-text-muted'}`}
           >
             1. Input
           </span>
           <ArrowRight size={16} className="text-text-muted" />
           <span
-            className={`px-3 py-1 rounded-full ${step === 2 ? 'bg-primary text-white' : 'bg-gray-200 dark:bg-gray-800 text-text-muted'}`}
+            className={`px-3 py-1 rounded-full transition-colors duration-300 ${step === 2 ? 'bg-primary text-white' : 'bg-gray-200 dark:bg-gray-800 text-text-muted'}`}
           >
             2. Configure
           </span>
           <ArrowRight size={16} className="text-text-muted" />
           <span
-            className={`px-3 py-1 rounded-full ${step === 3 ? 'bg-primary text-white' : 'bg-gray-200 dark:bg-gray-800 text-text-muted'}`}
+            className={`px-3 py-1 rounded-full transition-colors duration-300 ${step === 3 ? 'bg-primary text-white' : 'bg-gray-200 dark:bg-gray-800 text-text-muted'}`}
           >
             3. Export
           </span>
@@ -187,8 +192,9 @@ const Redact: FC = () => {
         {/* Left Column: Input & Configuration */}
         <div className="space-y-6">
           {/* Step 1: Input */}
-          <div
+          <motion.div
             className={`bg-card rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 ${step !== 1 ? 'opacity-80' : ''}`}
+            layout
           >
             <div className="flex justify-between items-center mb-4">
               <label htmlFor="chat-content" className="block text-lg font-semibold text-text">
@@ -213,40 +219,54 @@ const Redact: FC = () => {
               </div>
             </div>
 
-            {showSettings && (
-              <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">Date Format</label>
-                  <input
-                    type="text"
-                    value={dateFormat}
-                    onChange={(e) => setDateFormat(e.target.value)}
-                    className="w-full p-2 bg-background border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-text focus:ring-2 focus:ring-primary focus:outline-none"
-                    placeholder="dd/MM/yyyy"
-                  />
-                  <p className="text-xs text-text-muted mt-1">
-                    Use d, M, y, H, m, s tokens. Example: dd/MM/yyyy or MM/dd/yy
-                  </p>
-                </div>
+            <AnimatePresence>
+              {showSettings && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-text mb-2">
+                        Date Format
+                      </label>
+                      <input
+                        type="text"
+                        value={dateFormat}
+                        onChange={(e) => setDateFormat(e.target.value)}
+                        className="w-full p-2 bg-background border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-text focus:ring-2 focus:ring-primary focus:outline-none"
+                        placeholder="dd/MM/yyyy"
+                      />
+                      <p className="text-xs text-text-muted mt-1">
+                        Use d, M, y, H, m, s tokens. Example: dd/MM/yyyy or MM/dd/yy
+                      </p>
+                    </div>
 
-                <div className="flex items-center">
-                  <input
-                    id="aggressive-redaction"
-                    type="checkbox"
-                    checked={aggressiveRedaction}
-                    onChange={(e) => setAggressiveRedaction(e.target.checked)}
-                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                  />
-                  <label htmlFor="aggressive-redaction" className="ml-2 block text-sm text-text">
-                    Aggressive Redaction (Redact name parts within messages)
-                  </label>
-                </div>
-                <p className="text-xs text-text-muted pl-6">
-                  If checked, parts of the name (e.g., "Ebuka" from "King Ebuka") found in the
-                  message text will also be replaced with the alias.
-                </p>
-              </div>
-            )}
+                    <div className="flex items-center">
+                      <input
+                        id="aggressive-redaction"
+                        type="checkbox"
+                        checked={aggressiveRedaction}
+                        onChange={(e) => setAggressiveRedaction(e.target.checked)}
+                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                      />
+                      <label
+                        htmlFor="aggressive-redaction"
+                        className="ml-2 block text-sm text-text"
+                      >
+                        Aggressive Redaction (Redact name parts within messages)
+                      </label>
+                    </div>
+                    <p className="text-xs text-text-muted pl-6">
+                      If checked, parts of the name (e.g., "Ebuka" from "King Ebuka") found in the
+                      message text will also be replaced with the alias.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <textarea
               id="chat-content"
@@ -268,87 +288,96 @@ const Redact: FC = () => {
                 </button>
               </div>
             )}
-          </div>
+          </motion.div>
 
           {/* Step 2: Configuration */}
-          {step >= 2 && (
-            <div className="bg-card rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <h2 className="text-lg font-semibold text-text mb-4">Configuration</h2>
+          <AnimatePresence>
+            {step >= 2 && (
+              <motion.div
+                className="bg-card rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4 }}
+              >
+                <h2 className="text-lg font-semibold text-text mb-4">Configuration</h2>
 
-              {/* Date Range */}
-              <div className="mb-6">
-                <h3 className="text-sm font-medium text-text-muted mb-3 flex items-center">
-                  <Calendar size={16} className="mr-2" /> Date Range
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs text-text-muted mb-1">Start Date</label>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full p-2 bg-background border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-text focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-text-muted mb-1">End Date</label>
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full p-2 bg-background border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-text focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Participants */}
-              <div>
-                <h3 className="text-sm font-medium text-text-muted mb-3 flex items-center">
-                  <User size={16} className="mr-2" /> Participants ({participants.length})
-                </h3>
-                <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                  {participants.map((participant) => (
-                    <div key={participant} className="flex items-center space-x-3">
-                      <div className="w-1/3 text-sm text-text truncate" title={participant}>
-                        {participant}
-                      </div>
-                      <ArrowRight size={14} className="text-text-muted" />
-                      <div className="flex-grow flex space-x-2">
-                        <input
-                          type="text"
-                          value={aliases[participant] || ''}
-                          onChange={(e) => handleAliasChange(participant, e.target.value)}
-                          className="w-full p-2 bg-background border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-text focus:ring-2 focus:ring-primary focus:outline-none"
-                          placeholder="Alias"
-                        />
-                        <button
-                          onClick={() => saveAliasToMap(participant, aliases[participant])}
-                          className="p-2 text-text-muted hover:text-primary transition-colors"
-                          title="Save alias for future chats"
-                        >
-                          <Save size={16} />
-                        </button>
-                      </div>
+                {/* Date Range */}
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium text-text-muted mb-3 flex items-center">
+                    <Calendar size={16} className="mr-2" /> Date Range
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-text-muted mb-1">Start Date</label>
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="w-full p-2 bg-background border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-text focus:ring-2 focus:ring-primary focus:outline-none"
+                      />
                     </div>
-                  ))}
+                    <div>
+                      <label className="block text-xs text-text-muted mb-1">End Date</label>
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="w-full p-2 bg-background border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-text focus:ring-2 focus:ring-primary focus:outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+
+                {/* Participants */}
+                <div>
+                  <h3 className="text-sm font-medium text-text-muted mb-3 flex items-center">
+                    <User size={16} className="mr-2" /> Participants ({participants.length})
+                  </h3>
+                  <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                    {participants.map((participant) => (
+                      <div key={participant} className="flex items-center space-x-3">
+                        <div className="w-1/3 text-sm text-text truncate" title={participant}>
+                          {participant}
+                        </div>
+                        <ArrowRight size={14} className="text-text-muted" />
+                        <div className="grow flex space-x-2">
+                          <input
+                            type="text"
+                            value={aliases[participant] || ''}
+                            onChange={(e) => handleAliasChange(participant, e.target.value)}
+                            className="w-full p-2 bg-background border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-text focus:ring-2 focus:ring-primary focus:outline-none"
+                            placeholder="Alias"
+                          />
+                          <button
+                            onClick={() => saveAliasToMap(participant, aliases[participant])}
+                            className="p-2 text-text-muted hover:text-primary transition-colors"
+                            title="Save alias for future chats"
+                          >
+                            <Save size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Right Column: Preview & Export */}
         <div className="space-y-6">
-          <div
+          <motion.div
             className={`bg-card rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 h-full flex flex-col ${step < 2 ? 'opacity-50' : ''}`}
+            layout
           >
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-text">Redacted Preview</h2>
               <div className="text-xs text-text-muted">{redactedContent.length} chars</div>
             </div>
 
-            <div className="flex-grow bg-background border border-gray-200 dark:border-gray-700 rounded-xl p-4 font-mono text-sm text-text overflow-auto h-[500px] whitespace-pre-wrap mb-4">
+            <div className="grow bg-background border border-gray-200 dark:border-gray-700 rounded-xl p-4 font-mono text-sm text-text overflow-auto h-125 whitespace-pre-wrap mb-4">
               {step >= 2 ? redactedContent : 'Complete step 1 to see preview...'}
             </div>
 
@@ -379,10 +408,10 @@ const Redact: FC = () => {
               <Save size={18} className="mr-2" />
               Save to History
             </button>
-          </div>
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

@@ -2,6 +2,28 @@ import { type FC, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { type SavedChat, useAppStore } from '../store/useAppStore';
 import { ArrowRight, Clock, FileText, Trash2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4
+    }
+  }
+};
 
 const History: FC = () => {
   const navigate = useNavigate();
@@ -12,10 +34,20 @@ const History: FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-8">
+    <motion.div
+      className="max-w-7xl mx-auto p-4 sm:p-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <h1 className="text-3xl font-bold mb-8 text-text">History</h1>
       {savedChats.length === 0 ? (
-        <div className="text-center py-20 bg-card rounded-2xl border border-gray-200 dark:border-gray-800">
+        <motion.div
+          className="text-center py-20 bg-card rounded-2xl border border-gray-200 dark:border-gray-800"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
           <Clock size={48} className="mx-auto text-text-muted mb-4" />
           <h3 className="text-xl font-medium text-text mb-2">No saved chats</h3>
           <p className="text-text-muted mb-6">Chats you save will appear here for quick access.</p>
@@ -25,9 +57,14 @@ const History: FC = () => {
           >
             Start New Redaction
           </Link>
-        </div>
+        </motion.div>
       ) : (
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <motion.div
+          className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {savedChats.map((chat) => (
             <SavedChatItem
               key={chat.id}
@@ -36,9 +73,9 @@ const History: FC = () => {
               onDelete={deleteChat}
             />
           ))}
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 };
 
@@ -58,7 +95,11 @@ const SavedChatItem: FC<{
   }, [chat.date]);
 
   return (
-    <div className="bg-card p-5 rounded-xl border border-gray-200 dark:border-gray-800 hover:shadow-md transition-all flex flex-col h-full group relative overflow-hidden">
+    <motion.div
+      className="bg-card p-5 rounded-xl border border-gray-200 dark:border-gray-800 hover:shadow-md transition-all flex flex-col h-full group relative overflow-hidden"
+      variants={itemVariants}
+      layout
+    >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3 overflow-hidden">
           <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
@@ -96,7 +137,7 @@ const SavedChatItem: FC<{
           <Trash2 size={18} />
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
