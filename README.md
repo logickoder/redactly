@@ -83,4 +83,6 @@ All data processing happens entirely in your browser. No data is sent to any ser
 
 ## License
 
-[Add your license here]
+This project is licensed under the **Creative Commons Attribution 4.0 International License (CC BY 4.0)**.  
+You are free to use, share, and remix — even commercially — as long as you provide appropriate credit.  
+See [LICENSE](LICENSE) for more details.
