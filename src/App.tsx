@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Redact from './pages/Redact';
 import History from './pages/History';
 import Mappings from './pages/Mappings';
+import Feedback from './pages/Feedback';
 import { ToastProvider } from './context/ToastContext';
 import type { FC } from 'react';
 
@@ -17,6 +18,7 @@ const App: FC = () => {
             <Route path="redact" element={<Redact />} />
             <Route path="history" element={<History />} />
             <Route path="mappings" element={<Mappings />} />
+            <Route path="feedback" element={<Feedback />} />
           </Route>
         </Routes>
       </HashRouter>

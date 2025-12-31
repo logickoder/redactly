@@ -20,12 +20,15 @@ const Layout: FC = () => {
   }, [isDarkMode]);
 
   return (
-    <div className="min-h-screen flex flex-col font-sans">
+    <div className="flex min-h-screen flex-col font-sans">
       <SEO />
-      <nav className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-card/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-center sm:justify-between h-24 sm:h-16 items-center">
-            <Link to="/" className="shrink-0 text-2xl font-bold text-primary tracking-tight">
+      <nav className="bg-card/80 sticky top-0 z-50 w-full border-b border-gray-200 backdrop-blur-md dark:border-gray-800">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-24 flex-col items-center justify-center sm:h-16 sm:flex-row sm:justify-between">
+            <Link
+              to="/"
+              className="text-primary shrink-0 text-2xl font-bold tracking-tight"
+            >
               Redactly
             </Link>
 
@@ -39,13 +42,16 @@ const Layout: FC = () => {
               <TrailingIcon action={toggleDarkMode} label="Toggle theme">
                 {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
               </TrailingIcon>
-              <TrailingIcon action="#" label="Feedback">
+              <TrailingIcon action="/feedback" label="Feedback">
                 <MessageSquare size={20} />
               </TrailingIcon>
               <TrailingIcon action="https://x.com/logickoder" label="Twitter">
                 <ReactSVG src={Twitter} className={iconClass} wrapper="svg" />
               </TrailingIcon>
-              <TrailingIcon action="https://github.com/logickoder/redactly" label="GitHub">
+              <TrailingIcon
+                action="https://github.com/logickoder/redactly"
+                label="GitHub"
+              >
                 <ReactSVG src={Github} className={iconClass} wrapper="svg" />
               </TrailingIcon>
             </div>
@@ -57,13 +63,18 @@ const Layout: FC = () => {
         <Outlet />
       </main>
 
-      <footer className="bg-card border-t border-gray-200 dark:border-gray-800 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <a href="https://logickoder.dev" target="_blank" className="text-text-muted text-sm">
-            &copy; {new Date().getFullYear()} Jeffery Orazulike. All rights reserved.
+      <footer className="bg-card border-t border-gray-200 py-8 dark:border-gray-800">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:px-6 md:flex-row lg:px-8">
+          <a
+            href="https://logickoder.dev"
+            target="_blank"
+            className="text-text-muted text-sm"
+          >
+            &copy; {new Date().getFullYear()} Jeffery Orazulike. All rights
+            reserved.
           </a>
 
-          <div className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium border border-primary/20">
+          <div className="bg-primary/10 text-primary border-primary/20 rounded-full border px-3 py-1 text-xs font-medium">
             text processing
           </div>
         </div>
@@ -85,7 +96,7 @@ const TrailingIcon: FC<{
       onClick={isLink ? undefined : action}
       // @ts-expect-error TS doesn't like dynamic 'to' prop
       to={isLink ? action : undefined}
-      className="p-2 rounded-full text-text-muted hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+      className="text-text-muted hover:text-primary rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
       aria-label={label}
       target={isExternalLink ? '_blank' : undefined}
       rel={isExternalLink ? 'noopener noreferrer' : undefined}

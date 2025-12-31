@@ -235,9 +235,7 @@ const Redact: FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* Left Column: Input & Configuration */}
         <div className="space-y-6">
-          {/* Step 1: Input */}
           <RedactInput
             content={content}
             setContent={setContent}
@@ -250,7 +248,6 @@ const Redact: FC = () => {
             setAggressiveRedaction={setAggressiveRedaction}
           />
 
-          {/* Step 2: Configuration */}
           <AnimatePresence>
             {step >= 1 && (
               <RedactConfiguration
@@ -267,7 +264,6 @@ const Redact: FC = () => {
           </AnimatePresence>
         </div>
 
-        {/* Right Column: Preview & Export */}
         <div className="space-y-6">
           <RedactPreview
             redactedContent={redactedContent}
