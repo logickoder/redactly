@@ -13,12 +13,14 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useToast } from '../context/ToastContext.tsx';
 
 const Redact: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { dateFormat, setDateFormat, nameMap, updateNameMap, saveChat } =
     useAppStore();
+  const toast = useToast();
 
   const [content, setContent] = useState<string>('');
   const [parsedMessages, setParsedMessages] = useState<Message[]>([]);
@@ -117,11 +119,12 @@ const Redact: FC = () => {
 
   const saveAliasToMap = (original: string, alias: string) => {
     updateNameMap(original, alias);
+    toast.show(`Alias for "${original}" saved!`, 'success');
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(redactedContent);
-    // Could add a toast here
+  const copyToClipboard = async () => {
+    await navigator.clipboard.writeText(redactedContent);
+    toast.show('Redacted content copied to clipboard!', 'success');
   };
 
   const downloadFile = () => {
