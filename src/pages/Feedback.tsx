@@ -1,4 +1,4 @@
-import React, { type FC, useState, useTransition } from 'react';
+import { type FC, type FormEvent, useState, useTransition } from 'react';
 import { motion } from 'framer-motion';
 import { MessageSquare, Send, Star } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
@@ -10,7 +10,7 @@ const Feedback: FC = () => {
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
     if (!message.trim()) {
@@ -162,7 +162,7 @@ const Feedback: FC = () => {
             rel="noopener noreferrer"
             className="ml-1 text-blue-600 hover:underline dark:text-blue-400"
           >
-            Twitter
+            X
           </a>
         </p>
       </div>
