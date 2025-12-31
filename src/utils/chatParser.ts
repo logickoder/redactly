@@ -11,10 +11,8 @@ export interface ParseResult {
   participants: string[];
 }
 
-const IOS_REGEX =
-  /^\[(\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}),?\s(\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AP]M)?)]\s(.*?):\s(.*)/;
-const ANDROID_REGEX =
-  /^(\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}),?\s(\d{1,2}:\d{2}(?:\s?[AP]M)?)\s-\s(.*?):\s(.*)/;
+const CHAT_REGEX =
+  /^\s*\[?(\d{1,2}[/.-]\d{1,2}(?:[/.-]\d{2,4})?),?\s*(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[APap][Mm])?)]?(?:\s*-\s*|\s+)(.*?):\s(.*)/;
 
 export const parseChat = (text: string, dateFormat: string = 'dd/MM/yyyy'): ParseResult => {
   const lines = text.split('\n');
@@ -24,13 +22,7 @@ export const parseChat = (text: string, dateFormat: string = 'dd/MM/yyyy'): Pars
   let currentMessage: Message | null = null;
 
   lines.forEach((line, index) => {
-    // Try matching iOS format
-    let match = line.match(IOS_REGEX);
-
-    // If not iOS, try Android format
-    if (!match) {
-      match = line.match(ANDROID_REGEX);
-    }
+    const match = line.match(CHAT_REGEX);
 
     if (match) {
       // If we have a previous message, push it
@@ -54,6 +46,8 @@ export const parseChat = (text: string, dateFormat: string = 'dd/MM/yyyy'): Pars
         originalString: line
       };
     } else {
+      console.log('Line:', line);
+      console.log('Match:', match);
       // If it's a continuation of the previous message
       if (currentMessage) {
         currentMessage.content += '\n' + line;
@@ -84,24 +78,27 @@ const parseDate = (dateStr: string, timeStr: string, format: string): Date | nul
     // Separators: / . -
 
     const parts = cleanDate.split(/[/.-]/);
-    if (parts.length !== 3) return null;
+    // if (parts.length !== 3) return null;
 
     const formatParts = format.split(/[/.-]/);
-    if (formatParts.length !== 3) return null;
+    // if (formatParts.length !== 3) return null;
 
     let day = 0;
     let month = 0;
-    let year = 0;
+    let year = new Date().getFullYear(); // Default to current year
 
-    formatParts.forEach((part, index) => {
-      const val = parseInt(parts[index], 10);
+    const partsToUse = Math.min(parts.length, formatParts.length);
+
+    for (let i = 0; i < partsToUse; i++) {
+      const part = formatParts[i];
+      const val = parseInt(parts[i], 10);
       if (part.includes('d')) day = val;
       if (part.includes('M')) month = val - 1; // Month is 0-indexed in JS Date
       if (part.includes('y')) {
         year = val;
         if (year < 100) year += 2000; // Assume 20xx for 2-digit years
       }
-    });
+    }
 
     // Parse time
     // Assume HH:MM or HH:MM:SS or HH:MM AM/PM
@@ -115,13 +112,13 @@ const parseDate = (dateStr: string, timeStr: string, format: string): Date | nul
     // cleanTime format: 12:30 or 12:30 PM or 12:30:45
     const timeMatch = cleanTime.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s?([AP]M))?/i);
     if (timeMatch) {
-      let [, h, m, s, amp] = timeMatch;
+      const [, h, m, s, ampStr] = timeMatch;
       let hours = parseInt(h, 10);
       const minutes = parseInt(m, 10);
       const seconds = s ? parseInt(s, 10) : 0;
 
-      if (amp) {
-        amp = amp.toUpperCase();
+      if (ampStr) {
+        const amp = ampStr.toUpperCase();
         if (amp === 'PM' && hours < 12) hours += 12;
         if (amp === 'AM' && hours === 12) hours = 0;
       }
@@ -134,7 +131,8 @@ const parseDate = (dateStr: string, timeStr: string, format: string): Date | nul
     }
 
     return date;
-  } catch {
+  } catch (e) {
+    console.error('Date parsing error:', e);
     return null;
   }
 };
