@@ -7,11 +7,13 @@ import Mappings from './pages/Mappings';
 import Feedback from './pages/Feedback';
 import { ToastProvider } from './context/ToastContext';
 import type { FC } from 'react';
+import ScrollToTop from './components/ScrollToTop.tsx';
 
 const App: FC = () => {
   return (
     <ToastProvider>
       <HashRouter>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
