@@ -27,11 +27,11 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - name: Install dependencies
         run: pnpm install
@@ -40,7 +40,7 @@ jobs:
         run: pnpm run build
 
       - name: Upload build files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: build
           path: ./dist
@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: build
           path: ./dist
