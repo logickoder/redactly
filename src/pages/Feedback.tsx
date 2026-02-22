@@ -1,17 +1,19 @@
-import { type FC, type FormEvent, useState, useTransition } from 'react';
+import { type FC, type FormEvent, useState } from 'react';
 import { motion } from 'framer-motion';
 import { MessageSquare, Send, Star } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
 const Feedback: FC = () => {
   const toast = useToast();
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const [rating, setRating] = useState<number>(0);
   const [hoveredStar, setHoveredStar] = useState<number>(0);
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
+    if (isPending) return;
+
     e.preventDefault();
 
     if (!message.trim()) {
@@ -19,44 +21,46 @@ const Feedback: FC = () => {
       return;
     }
 
-    startTransition(async () => {
-      try {
-        const response = await fetch('https://formspree.io/f/mgoegdqp', {
-          method: 'POST',
-          body: JSON.stringify({
-            rating,
-            message,
-            email,
-            _subject: `Redactly Feedback - ${rating} Stars`,
-          }),
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-        });
+    try {
+      setIsPending(true);
 
-        if (response.ok) {
-          toast.show(
-            'Thank you for your feedback! We appreciate your input.',
-            'success',
-          );
-          setMessage('');
-          setRating(0);
-          setEmail('');
-        } else {
-          toast.show(
-            'An error occurred while sending your feedback. Please try again later.',
-            'error',
-          );
-        }
-      } catch (e) {
-        console.error(e);
+      const response = await fetch('https://formspree.io/f/mgoegdqp', {
+        method: 'POST',
+        body: JSON.stringify({
+          rating,
+          message,
+          email,
+          _subject: `Redactly Feedback - ${rating} Stars`,
+        }),
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        toast.show(
+          'Thank you for your feedback! We appreciate your input.',
+          'success',
+        );
+        setMessage('');
+        setRating(0);
+        setEmail('');
+      } else {
         toast.show(
           'An error occurred while sending your feedback. Please try again later.',
           'error',
         );
       }
-    });
+    } catch (e) {
+      console.error(e);
+      toast.show(
+        'An error occurred while sending your feedback. Please try again later.',
+        'error',
+      );
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (

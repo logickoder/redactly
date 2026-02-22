@@ -1,6 +1,6 @@
 import { type FC, type ReactNode, useEffect } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { History, MessageSquare, Moon, Sun, Users } from 'lucide-react';
+import { History, Lock, MessageSquare, Moon, Sun, Users } from 'lucide-react';
 import Github from '../assets/github.svg';
 import Twitter from '../assets/x.svg';
 import { ReactSVG } from 'react-svg';
@@ -95,12 +95,13 @@ const Layout: FC = () => {
 
           <div className="flex items-center gap-2">
             <span
-              className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white"
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-white"
               style={{
                 backgroundImage: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
               }}
             >
-              🔒 100% Client-Side
+              <Lock size={10} />
+              100% Client-Side
             </span>
           </div>
         </div>

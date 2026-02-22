@@ -11,6 +11,9 @@ interface AppSettingsState {
   nameMap: Record<string, string>;
   updateNameMap: (name: string, alias: string) => void;
   deleteNameMapping: (name: string) => void;
+
+  aggressiveRedaction: boolean;
+  toggleAggressiveRedaction: () => void;
 }
 
 export const useAppSettings = create<AppSettingsState>()(
@@ -37,6 +40,10 @@ export const useAppSettings = create<AppSettingsState>()(
           delete newMap[name];
           return { nameMap: newMap };
         }),
+
+      aggressiveRedaction: false,
+      toggleAggressiveRedaction: () =>
+        set((state) => ({ aggressiveRedaction: !state.aggressiveRedaction })),
     }),
     {
       name: 'redactly-settings',

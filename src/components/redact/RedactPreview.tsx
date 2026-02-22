@@ -9,6 +9,7 @@ interface RedactPreviewProps {
   onCopy: () => void;
   onDownload: () => void;
   onSave: () => void;
+  showSave: boolean;
 }
 
 const RedactPreview: FC<RedactPreviewProps> = ({
@@ -17,6 +18,7 @@ const RedactPreview: FC<RedactPreviewProps> = ({
   onCopy,
   onDownload,
   onSave,
+  showSave,
 }) => {
   const { ref, virtualizer, virtualItems, lines, totalSize } =
     useVirtualizedContent(redactedContent);
@@ -110,15 +112,17 @@ const RedactPreview: FC<RedactPreviewProps> = ({
         </button>
       </div>
 
-      <button
-        onClick={onSave}
-        disabled={step < 1}
-        className="text-primary hover:bg-primary/10 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-40"
-        style={{ borderColor: 'var(--color-primary)' }}
-      >
-        <Save size={16} />
-        Save to History
-      </button>
+      {showSave && (
+        <button
+          onClick={onSave}
+          disabled={step < 1}
+          className="text-primary hover:bg-primary/10 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-40"
+          style={{ borderColor: 'var(--color-primary)' }}
+        >
+          <Save size={16} />
+          Save to History
+        </button>
+      )}
     </motion.div>
   );
 };

@@ -10,13 +10,22 @@ import RedactInput from '../components/redact/RedactInput';
 import RedactConfiguration from '../components/redact/RedactConfiguration';
 import RedactPreview from '../components/redact/RedactPreview';
 import SaveChatModal from '../components/SaveChatModal';
+import AddParticipantModal from '../components/AddParticipantModal';
 
 const Redact: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { dateFormat, setDateFormat, nameMap, updateNameMap } =
-    useAppSettings();
+  const {
+    dateFormat,
+    setDateFormat,
+    nameMap,
+    updateNameMap,
+    aggressiveRedaction,
+    toggleAggressiveRedaction,
+  } = useAppSettings();
   const toast = useToast();
+
+  const isFromHistory = Boolean(location.state?.savedChat);
 
   const [content, setContent] = useState<string>('');
   const [parsedMessages, setParsedMessages] = useState<Message[]>([]);
@@ -26,18 +35,14 @@ const Redact: FC = () => {
     Record<string, string>
   >({});
   const [step, setStep] = useState<number>(0);
-  const [aggressiveRedaction, setAggressiveRedaction] =
-    useState<boolean>(false);
   const [isParsing, setIsParsing] = useState<boolean>(false);
-
-  const aliasDebounceTimer = useRef<number | null>(null);
-
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
-
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [defaultChatName, setDefaultChatName] = useState('');
+  const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false);
 
+  const aliasDebounceTimer = useRef<number | null>(null);
   const hasInitialized = useRef(false);
 
   const redactedContent = useMemo(() => {
@@ -54,28 +59,24 @@ const Redact: FC = () => {
         return !(end && msg.date > end);
       })
       .map((msg) => {
-        let redactedLine = msg.originalString;
-
+        let line = msg.originalString;
         Object.entries(debouncedAliases).forEach(([name, aliasName]) => {
-          const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          redactedLine = redactedLine.replace(
-            new RegExp(escapedName, 'gi'),
-            aliasName,
-          );
-
+          const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          line = line.replace(new RegExp(escaped, 'gi'), aliasName);
           if (aggressiveRedaction) {
-            const parts = name.split(/\s+/).filter((p) => p.length > 2);
-            parts.forEach((part) => {
-              const escapedPart = part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-              redactedLine = redactedLine.replace(
-                new RegExp(`\\b${escapedPart}\\b`, 'gi'),
-                aliasName,
-              );
-            });
+            name
+              .split(/\s+/)
+              .filter((p) => p.length > 2)
+              .forEach((part) => {
+                const escapedPart = part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                line = line.replace(
+                  new RegExp(`\\b${escapedPart}\\b`, 'gi'),
+                  aliasName,
+                );
+              });
           }
         });
-
-        return redactedLine;
+        return line;
       })
       .join('\n');
   }, [
@@ -88,23 +89,21 @@ const Redact: FC = () => {
 
   const steps = useMemo(() => ['Input', 'Configure', 'Export'], []);
 
+  const nextAliasLabel = useMemo(() => {
+    return `User ${String.fromCharCode(65 + participants.length)}`;
+  }, [participants.length]);
+
   const handleParse = async (text: string) => {
     setIsParsing(true);
-
     try {
       await new Promise((resolve) => setTimeout(resolve, 50));
-
       const result = parseChat(text, dateFormat);
       setParsedMessages(result.messages);
       setParticipants(result.participants);
 
       const newAliases: Record<string, string> = {};
       result.participants.forEach((p, index) => {
-        if (nameMap[p]) {
-          newAliases[p] = nameMap[p];
-        } else {
-          newAliases[p] = `User ${String.fromCharCode(65 + index)}`;
-        }
+        newAliases[p] = nameMap[p] ?? `User ${String.fromCharCode(65 + index)}`;
       });
       setAliases(newAliases);
 
@@ -113,19 +112,12 @@ const Redact: FC = () => {
         const last = result.messages[result.messages.length - 1].date;
         if (first) setStartDate(first.toISOString().split('T')[0]);
         if (last) setEndDate(last.toISOString().split('T')[0]);
-      }
-
-      if (result.messages.length > 0) {
         setStep(1);
-        toast.show(
-          `Chat parsed successfully! ${result.messages.length} messages found.`,
-          'success',
-        );
+        toast.show(`Parsed ${result.messages.length} messages.`, 'success');
       } else {
         toast.show('No messages found. Please check the format.', 'error');
       }
-    } catch (error) {
-      console.error('Parsing error:', error);
+    } catch {
       toast.show('Error parsing chat. Please check the format.', 'error');
     } finally {
       setIsParsing(false);
@@ -136,30 +128,21 @@ const Redact: FC = () => {
     setAliases((prev) => ({ ...prev, [original]: newAlias }));
   };
 
-  useEffect(() => {
-    if (aliasDebounceTimer.current) {
-      clearTimeout(aliasDebounceTimer.current);
-    }
-
-    aliasDebounceTimer.current = setTimeout(() => {
-      setDebouncedAliases(aliases);
-    }, 1000);
-
-    return () => {
-      if (aliasDebounceTimer.current) {
-        clearTimeout(aliasDebounceTimer.current);
-      }
-    };
-  }, [aliases]);
-
   const saveAliasToMap = (original: string, alias: string) => {
     updateNameMap(original, alias);
     toast.show(`Alias for "${original}" saved!`, 'success');
   };
 
+  const addParticipant = (name: string, alias: string, save: boolean) => {
+    setParticipants((prev) => [...prev, name]);
+    setAliases((prev) => ({ ...prev, [name]: alias }));
+    if (save) updateNameMap(name, alias);
+    toast.show(`"${name}" added as participant.`, 'success');
+  };
+
   const copyToClipboard = async () => {
     await navigator.clipboard.writeText(redactedContent);
-    toast.show('Redacted content copied to clipboard!', 'success');
+    toast.show('Copied to clipboard!', 'success');
   };
 
   const downloadFile = () => {
@@ -172,18 +155,13 @@ const Redact: FC = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.show('File downloaded successfully!', 'success');
+    toast.show('File downloaded!', 'success');
   };
 
   const handleSaveClick = () => {
     let name = participants.join(', ');
-    if (name.length > 50) {
-      name = name.substring(0, 47) + '...';
-    }
-    if (!name) {
-      name = `Chat ${new Date().toLocaleDateString()}`;
-    }
-
+    if (name.length > 50) name = name.substring(0, 47) + '...';
+    if (!name) name = `Chat ${new Date().toLocaleDateString()}`;
     setDefaultChatName(name);
     setIsSaveModalOpen(true);
   };
@@ -191,13 +169,10 @@ const Redact: FC = () => {
   const handleSaveConfirm = async (name: string) => {
     let finalName = name;
     let counter = 1;
-
-    const existingPreviews = await chatStorage.getAllChatPreviews();
-    while (existingPreviews.some((chat) => chat.title === finalName)) {
-      finalName = `${name} (${counter})`;
-      counter++;
+    const existing = await chatStorage.getAllChatPreviews();
+    while (existing.some((c) => c.title === finalName)) {
+      finalName = `${name} (${counter++})`;
     }
-
     try {
       await chatStorage.saveChat({
         id: crypto.randomUUID(),
@@ -206,31 +181,34 @@ const Redact: FC = () => {
         content: redactedContent,
         originalContent: content,
       });
-
-      toast.show('Chat saved successfully!', 'success');
+      toast.show('Chat saved!', 'success');
       navigate('/history');
-    } catch (error) {
-      console.error('Error saving chat:', error);
+    } catch {
       toast.show('Failed to save chat', 'error');
     }
   };
 
   useEffect(() => {
-    if (hasInitialized.current) return;
+    if (aliasDebounceTimer.current) clearTimeout(aliasDebounceTimer.current);
+    aliasDebounceTimer.current = setTimeout(
+      () => setDebouncedAliases(aliases),
+      1000,
+    );
+    return () => {
+      if (aliasDebounceTimer.current) clearTimeout(aliasDebounceTimer.current);
+    };
+  }, [aliases]);
 
-    if (location.state?.fileContent) {
-      setContent(location.state.fileContent);
-      handleParse(location.state.fileContent);
-      hasInitialized.current = true;
-    } else if (location.state?.savedChat) {
-      const saved = location.state.savedChat;
-      setContent(saved.originalContent || '');
-      if (saved.originalContent) {
-        handleParse(saved.originalContent);
-      }
-      hasInitialized.current = true;
-    }
-  }, [location.state]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (location.state?.fileContent && !hasInitialized.current) {
+    setContent(location.state.fileContent);
+    void handleParse(location.state.fileContent);
+    hasInitialized.current = true;
+  } else if (location.state?.savedChat && !hasInitialized.current) {
+    const saved = location.state.savedChat;
+    setContent(saved.originalContent || '');
+    if (saved.originalContent) void handleParse(saved.originalContent);
+    hasInitialized.current = true;
+  }
 
   return (
     <motion.div
@@ -241,10 +219,9 @@ const Redact: FC = () => {
     >
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-text hidden text-3xl font-bold sm:block">
-          Redact Chat
+          {isFromHistory ? 'Saved Chat' : 'Redact Chat'}
         </h1>
 
-        {/* Step pills */}
         <div className="flex grow items-center justify-center gap-2 text-sm sm:grow-0 sm:justify-start">
           {steps.map((s, index) => (
             <Fragment key={s}>
@@ -301,8 +278,9 @@ const Redact: FC = () => {
             dateFormat={dateFormat}
             setDateFormat={setDateFormat}
             aggressiveRedaction={aggressiveRedaction}
-            setAggressiveRedaction={setAggressiveRedaction}
+            toggleAggressiveRedaction={toggleAggressiveRedaction}
             isParsing={isParsing}
+            isFromHistory={isFromHistory}
           />
 
           <AnimatePresence>
@@ -316,6 +294,8 @@ const Redact: FC = () => {
                 aliases={aliases}
                 handleAliasChange={handleAliasChange}
                 saveAliasToMap={saveAliasToMap}
+                aggressiveRedaction={aggressiveRedaction}
+                onAddParticipant={() => setIsAddParticipantOpen(true)}
               />
             )}
           </AnimatePresence>
@@ -328,15 +308,27 @@ const Redact: FC = () => {
             onCopy={copyToClipboard}
             onDownload={downloadFile}
             onSave={handleSaveClick}
+            showSave={!isFromHistory}
           />
         </div>
       </div>
 
       <SaveChatModal
+        key={`save-chat-${isSaveModalOpen}`}
         isOpen={isSaveModalOpen}
         onClose={() => setIsSaveModalOpen(false)}
         onSave={handleSaveConfirm}
         defaultName={defaultChatName}
+      />
+
+      <AddParticipantModal
+        key={`add-participant-${isAddParticipantOpen}-${participants.length}`}
+        isOpen={isAddParticipantOpen}
+        onClose={() => setIsAddParticipantOpen(false)}
+        onAdd={addParticipant}
+        nameMap={nameMap}
+        existingParticipants={participants}
+        nextAliasLabel={nextAliasLabel}
       />
     </motion.div>
   );

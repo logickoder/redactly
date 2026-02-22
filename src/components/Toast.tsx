@@ -1,5 +1,5 @@
 import React, { type FC, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { AlertCircle, CheckCircle, Info, X } from 'lucide-react';
 import type { ToastMessage } from '../context/ToastContext';
 
@@ -13,7 +13,7 @@ interface ToastContainerProps {
   remove: (id: string) => void;
 }
 
-const toastVariants = {
+const toastVariants: Variants = {
   initial: { opacity: 0, x: 48, scale: 0.94 },
   animate: {
     opacity: 1,
@@ -101,5 +101,3 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({
     </div>
   );
 };
-
-export default Toast;

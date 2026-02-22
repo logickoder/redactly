@@ -1,4 +1,4 @@
-import { type FC, useEffect, useState } from 'react';
+import { type FC, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Save, X } from 'lucide-react';
 
@@ -17,13 +17,6 @@ const SaveChatModal: FC<SaveChatModalProps> = ({
 }) => {
   const [name, setName] = useState(defaultName);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (isOpen) {
-      setName(defaultName);
-      setError('');
-    }
-  }, [isOpen, defaultName]);
 
   const handleSave = () => {
     const trimmedName = name.trim();

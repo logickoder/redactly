@@ -1,6 +1,6 @@
 import { type FC } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Calendar, Save, User } from 'lucide-react';
+import { ArrowRight, Calendar, Save, User, UserPlus } from 'lucide-react';
 
 interface RedactConfigurationProps {
   startDate: string;
@@ -11,7 +11,34 @@ interface RedactConfigurationProps {
   aliases: Record<string, string>;
   handleAliasChange: (original: string, alias: string) => void;
   saveAliasToMap: (original: string, alias: string) => void;
+  aggressiveRedaction: boolean;
+  onAddParticipant: () => void;
 }
+
+const SectionHeader: FC<{
+  icon: React.ReactNode;
+  label: string;
+  iconColor?: string;
+  iconBg?: string;
+  trailing?: React.ReactNode;
+}> = ({
+  icon,
+  label,
+  iconColor = 'text-primary',
+  iconBg = 'rgba(99,102,241,0.12)',
+  trailing,
+}) => (
+  <h3 className="text-text-muted mb-3 flex items-center gap-2 text-xs font-semibold tracking-wider uppercase">
+    <span
+      className="flex h-5 w-5 items-center justify-center rounded-md"
+      style={{ background: iconBg }}
+    >
+      <span className={iconColor}>{icon}</span>
+    </span>
+    {label}
+    {trailing && <span className="ml-auto">{trailing}</span>}
+  </h3>
+);
 
 const RedactConfiguration: FC<RedactConfigurationProps> = ({
   startDate,
@@ -22,6 +49,8 @@ const RedactConfiguration: FC<RedactConfigurationProps> = ({
   aliases,
   handleAliasChange,
   saveAliasToMap,
+  aggressiveRedaction,
+  onAddParticipant,
 }) => {
   return (
     <motion.div
@@ -33,17 +62,8 @@ const RedactConfiguration: FC<RedactConfigurationProps> = ({
     >
       <h2 className="text-text mb-5 text-base font-semibold">Configuration</h2>
 
-      {/* Date Range */}
       <div className="mb-6">
-        <h3 className="text-text-muted mb-3 flex items-center gap-2 text-xs font-semibold tracking-wider uppercase">
-          <span
-            className="flex h-5 w-5 items-center justify-center rounded-md"
-            style={{ background: 'rgba(99,102,241,0.12)' }}
-          >
-            <Calendar size={12} className="text-primary" />
-          </span>
-          Date Range
-        </h3>
+        <SectionHeader icon={<Calendar size={12} />} label="Date Range" />
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-text-muted mb-1.5 block text-xs font-medium">
@@ -70,23 +90,33 @@ const RedactConfiguration: FC<RedactConfigurationProps> = ({
         </div>
       </div>
 
-      {/* Participants */}
       <div>
-        <h3 className="text-text-muted mb-3 flex items-center gap-2 text-xs font-semibold tracking-wider uppercase">
-          <span
-            className="flex h-5 w-5 items-center justify-center rounded-md"
-            style={{ background: 'rgba(139,92,246,0.12)' }}
-          >
-            <User size={12} style={{ color: '#8B5CF6' }} />
-          </span>
-          Participants
-          <span
-            className="text-primary ml-auto rounded-full px-2 py-0.5 text-xs font-semibold"
-            style={{ background: 'rgba(99,102,241,0.1)' }}
-          >
-            {participants.length}
-          </span>
-        </h3>
+        <SectionHeader
+          icon={<User size={12} />}
+          label="Participants"
+          iconBg="rgba(139,92,246,0.12)"
+          iconColor="text-secondary"
+          trailing={
+            <div className="flex items-center gap-2">
+              <span
+                className="text-primary rounded-full px-2 py-0.5 text-xs font-semibold"
+                style={{ background: 'rgba(99,102,241,0.1)' }}
+              >
+                {participants.length}
+              </span>
+              {aggressiveRedaction && (
+                <button
+                  onClick={onAddParticipant}
+                  className="text-primary hover:bg-primary/10 flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-colors"
+                  title="Add participant manually"
+                >
+                  <UserPlus size={12} />
+                  Add
+                </button>
+              )}
+            </div>
+          }
+        />
         <div className="max-h-60 space-y-2.5 overflow-y-auto pr-1">
           {participants.map((participant) => (
             <div

@@ -1,6 +1,6 @@
 import { type FC, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { RefreshCw, Settings } from 'lucide-react';
+import { Pencil, RefreshCw, Settings } from 'lucide-react';
 import { useVirtualizedContent } from '../../hooks/useVirtualizedContent.tsx';
 
 interface RedactInputProps {
@@ -12,8 +12,9 @@ interface RedactInputProps {
   dateFormat: string;
   setDateFormat: (format: string) => void;
   aggressiveRedaction: boolean;
-  setAggressiveRedaction: (aggressive: boolean) => void;
+  toggleAggressiveRedaction: () => void;
   isParsing: boolean;
+  isFromHistory: boolean;
 }
 
 const RedactInput: FC<RedactInputProps> = ({
@@ -25,13 +26,16 @@ const RedactInput: FC<RedactInputProps> = ({
   dateFormat,
   setDateFormat,
   aggressiveRedaction,
-  setAggressiveRedaction,
+  toggleAggressiveRedaction,
   isParsing,
+  isFromHistory,
 }) => {
   const [showSettings, setShowSettings] = useState(false);
 
   const { ref, virtualizer, virtualItems, lines, totalSize } =
     useVirtualizedContent(content);
+
+  const canEdit = step > 0 && !isFromHistory;
 
   return (
     <motion.div
@@ -53,11 +57,12 @@ const RedactInput: FC<RedactInputProps> = ({
           >
             <Settings size={16} />
           </button>
-          {step > 1 && (
+          {canEdit && (
             <button
               onClick={() => setStep(0)}
-              className="text-primary hover:bg-primary/10 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
+              className="text-primary hover:bg-primary/10 flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
             >
+              <Pencil size={11} />
               Edit
             </button>
           )}
@@ -96,15 +101,13 @@ const RedactInput: FC<RedactInputProps> = ({
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="relative mt-0.5 flex shrink-0 items-center">
-                  <input
-                    id="aggressive-redaction"
-                    type="checkbox"
-                    checked={aggressiveRedaction}
-                    onChange={(e) => setAggressiveRedaction(e.target.checked)}
-                    className="accent-primary h-4 w-4 cursor-pointer rounded"
-                  />
-                </div>
+                <input
+                  id="aggressive-redaction"
+                  type="checkbox"
+                  checked={aggressiveRedaction}
+                  onChange={toggleAggressiveRedaction}
+                  className="accent-primary mt-0.5 h-4 w-4 cursor-pointer rounded"
+                />
                 <div>
                   <label
                     htmlFor="aggressive-redaction"
@@ -133,42 +136,56 @@ const RedactInput: FC<RedactInputProps> = ({
           onChange={(e) => setContent(e.target.value)}
         />
       ) : (
-        <div
-          ref={ref}
-          className="h-64 w-full overflow-auto rounded-xl border p-4 font-mono text-sm"
-          style={{
-            background: 'var(--color-background)',
-            color: 'var(--color-text)',
-            borderColor: 'var(--color-border)',
-          }}
-        >
+        <div className="relative">
           <div
+            ref={ref}
+            className="h-64 w-full overflow-auto rounded-xl border p-4 font-mono text-sm"
             style={{
-              height: `${totalSize}px`,
-              width: '100%',
-              position: 'relative',
+              background: 'var(--color-background)',
+              color: 'var(--color-text)',
+              borderColor: 'var(--color-border)',
             }}
           >
-            {virtualItems.map((virtualRow) => (
-              <div
-                key={virtualRow.index}
-                data-index={virtualRow.index}
-                ref={virtualizer.measureElement}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  transform: `translateY(${virtualRow.start}px)`,
-                  padding: '1px 0',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                }}
-              >
-                {lines[virtualRow.index]}
-              </div>
-            ))}
+            <div
+              style={{
+                height: `${totalSize}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+            >
+              {virtualItems.map((virtualRow) => (
+                <div
+                  key={virtualRow.index}
+                  data-index={virtualRow.index}
+                  ref={virtualizer.measureElement}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualRow.start}px)`,
+                    padding: '1px 0',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {lines[virtualRow.index]}
+                </div>
+              ))}
+            </div>
           </div>
+          {canEdit && (
+            <button
+              onClick={() => setStep(0)}
+              className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-xl bg-black/0 opacity-0 transition-all hover:bg-black/10 hover:opacity-100 dark:hover:bg-black/30"
+              title="Click to edit content"
+            >
+              <span className="flex items-center gap-2 rounded-lg bg-white/90 px-4 py-2 text-sm font-medium text-gray-800 shadow-md dark:bg-gray-800/90 dark:text-gray-100">
+                <Pencil size={14} />
+                Click to edit
+              </span>
+            </button>
+          )}
         </div>
       )}
 

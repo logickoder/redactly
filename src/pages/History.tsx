@@ -4,14 +4,13 @@ import * as chatStorage from '../utils/chatStorage';
 import { type ChatPreview } from '../utils/chatStorage';
 import { ArrowRight, Clock, FileText, Trash2 } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
+import PageHeader from '../components/PageHeader';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-    },
+    transition: { staggerChildren: 0.08 },
   },
 };
 
@@ -20,10 +19,7 @@ const itemVariants: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.4,
-      ease: 'easeOut',
-    },
+    transition: { duration: 0.4, ease: 'easeOut' },
   },
 };
 
@@ -46,14 +42,13 @@ const History: FC = () => {
     try {
       await chatStorage.deleteChat(id);
       setChats((prev) => prev.filter((c) => c.id !== id));
-    } catch (error) {
-      console.error('Failed to delete chat:', error);
+    } catch {
+      console.error('Failed to delete chat');
     }
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-
     chatStorage
       .getAllChatPreviews()
       .then((previews) => {
@@ -62,11 +57,7 @@ const History: FC = () => {
           setIsPending(false);
         }
       })
-      .catch((err) => {
-        console.error('Failed to load chat previews:', err);
-        setIsPending(false);
-      });
-
+      .catch(() => setIsPending(false));
     return () => {
       cancelled = true;
     };
@@ -79,15 +70,10 @@ const History: FC = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="mb-8">
-        <h1 className="text-text text-3xl font-bold">History</h1>
-        <div
-          className="mt-2 h-1 w-16 rounded-full"
-          style={{
-            backgroundImage: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
-          }}
-        />
-      </div>
+      <PageHeader
+        title="History"
+        subtitle="Your saved redacted conversations"
+      />
 
       {isPending ? (
         <div className="flex items-center justify-center py-20">
@@ -119,7 +105,7 @@ const History: FC = () => {
             Chats you save will appear here for quick access.
           </p>
           <Link
-            to="/#upload-section"
+            to="/"
             className="btn-gradient inline-flex items-center gap-2 text-sm"
           >
             Start New Redaction
@@ -152,26 +138,24 @@ const SavedChatItem: FC<{
   onLoad: (chat: ChatPreview) => void;
   onDelete: (id: string) => void;
 }> = ({ chat, onLoad, onDelete }) => {
-  const saved = useMemo(() => {
-    return new Date(chat.date).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }, [chat.date]);
+  const saved = useMemo(
+    () =>
+      new Date(chat.date).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    [chat.date],
+  );
 
   return (
     <motion.div
       className="card-base group relative flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
-      style={
-        { '--tw-ring-color': 'rgba(99,102,241,0.3)' } as React.CSSProperties
-      }
       variants={itemVariants}
       whileHover={{ boxShadow: '0 8px 30px rgba(99,102,241,0.18)' }}
     >
-      {/* Gradient accent bar */}
       <div
         className="h-1 w-full shrink-0"
         style={{ backgroundImage: 'linear-gradient(90deg, #6366F1, #8B5CF6)' }}

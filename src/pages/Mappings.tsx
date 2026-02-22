@@ -2,6 +2,7 @@ import { type FC, useCallback, useMemo, useState } from 'react';
 import { useAppSettings } from '../hooks/useStore';
 import { Edit2, Save, Search, Trash2, Users, X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import PageHeader from '../components/PageHeader';
 
 const Mappings: FC = () => {
   const { nameMap, updateNameMap, deleteNameMapping } = useAppSettings();
@@ -13,11 +14,7 @@ const Mappings: FC = () => {
   const mappings = useMemo(() => {
     const entries = Object.entries(nameMap);
     const query = searchTerm.toLowerCase().trim();
-
-    if (!query) {
-      return entries;
-    }
-
+    if (!query) return entries;
     return entries.filter(
       ([name, alias]) =>
         name.toLowerCase().includes(query) ||
@@ -52,24 +49,20 @@ const Mappings: FC = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="mb-8">
-        <h1 className="text-text text-3xl font-bold">Saved Name Mappings</h1>
-        <div
-          className="mt-2 h-1 w-16 rounded-full"
-          style={{
-            backgroundImage: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
-          }}
-        />
-      </div>
+      <PageHeader
+        title="Saved Name Mappings"
+        subtitle="Aliases saved from previous redactions"
+      />
 
       <div className="relative mb-6">
-        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-          <Search className="text-text-muted h-4 w-4" />
-        </div>
+        <Search
+          size={16}
+          className="text-text-muted pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
+        />
         <input
           type="text"
-          className="input-base block w-full pl-10"
-          style={{ borderRadius: '0.75rem' }}
+          className="input-base block w-full"
+          style={{ paddingLeft: '2.25rem' }}
           placeholder="Search names or aliases..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -83,114 +76,95 @@ const Mappings: FC = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.15 }}
         >
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr style={{ background: 'rgba(99,102,241,0.06)' }}>
+          <table className="min-w-full">
+            <thead>
+              <tr style={{ background: 'rgba(99,102,241,0.06)' }}>
+                {['Original Name', 'Alias', 'Actions'].map((h, i) => (
                   <th
+                    key={h}
                     scope="col"
-                    className="text-text-muted px-6 py-3.5 text-left text-xs font-semibold tracking-wider uppercase"
+                    className={`text-text-muted px-6 py-3.5 text-xs font-semibold tracking-wider uppercase ${i === 2 ? 'text-right' : 'text-left'}`}
                   >
-                    Original Name
+                    {h}
                   </th>
-                  <th
-                    scope="col"
-                    className="text-text-muted px-6 py-3.5 text-left text-xs font-semibold tracking-wider uppercase"
-                  >
-                    Alias
-                  </th>
-                  <th
-                    scope="col"
-                    className="text-text-muted px-6 py-3.5 text-right text-xs font-semibold tracking-wider uppercase"
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                className="divide-y"
-                style={{ borderColor: 'var(--color-border)' }}
-              >
-                {mappings.map(([name, alias]) => (
-                  <tr
-                    key={name}
-                    className="transition-colors"
-                    style={
-                      {
-                        '--hover-bg': 'rgba(99,102,241,0.04)',
-                      } as React.CSSProperties
-                    }
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background =
-                        'rgba(99,102,241,0.04)')
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = '')
-                    }
-                  >
-                    <td className="text-text px-6 py-4 text-sm font-medium whitespace-nowrap">
-                      {name}
-                    </td>
-                    <td className="text-text-muted px-6 py-4 text-sm whitespace-nowrap">
-                      {editingName === name ? (
-                        <input
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          className="input-base w-full"
-                          autoFocus
-                        />
-                      ) : (
-                        <span
-                          className="text-primary rounded-full px-2.5 py-1 text-xs font-semibold"
-                          style={{ background: 'rgba(99,102,241,0.1)' }}
-                        >
-                          {alias}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
-                      {editingName === name ? (
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={saveEdit}
-                            className="text-primary hover:bg-primary/10 rounded-lg p-1.5 transition-colors"
-                            title="Save"
-                          >
-                            <Save size={16} />
-                          </button>
-                          <button
-                            onClick={cancelEdit}
-                            className="rounded-lg p-1.5 text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
-                            title="Cancel"
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => startEditing(name, alias)}
-                            className="text-text-muted hover:text-primary hover:bg-primary/10 rounded-lg p-1.5 transition-all"
-                            title="Edit"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button
-                            onClick={() => deleteNameMapping(name)}
-                            className="text-text-muted rounded-lg p-1.5 transition-all hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
-                            title="Delete"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </tr>
+            </thead>
+            <tbody
+              className="divide-y"
+              style={{ borderColor: 'var(--color-border)' }}
+            >
+              {mappings.map(([name, alias]) => (
+                <tr
+                  key={name}
+                  className="transition-colors"
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = 'rgba(99,102,241,0.04)')
+                  }
+                  onMouseLeave={(e) => (e.currentTarget.style.background = '')}
+                >
+                  <td className="text-text px-6 py-4 text-sm font-medium whitespace-nowrap">
+                    {name}
+                  </td>
+                  <td className="text-text-muted px-6 py-4 text-sm whitespace-nowrap">
+                    {editingName === name ? (
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="input-base w-full"
+                        autoFocus
+                      />
+                    ) : (
+                      <span
+                        className="text-primary rounded-full px-2.5 py-1 text-xs font-semibold"
+                        style={{ background: 'rgba(99,102,241,0.1)' }}
+                      >
+                        {alias}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
+                    {editingName === name ? (
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={saveEdit}
+                          className="text-primary hover:bg-primary/10 rounded-lg p-1.5 transition-colors"
+                          title="Save"
+                        >
+                          <Save size={16} />
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          className="rounded-lg p-1.5 text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
+                          title="Cancel"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => startEditing(name, alias)}
+                          className="text-text-muted hover:text-primary hover:bg-primary/10 rounded-lg p-1.5 transition-all"
+                          title="Edit"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => deleteNameMapping(name)}
+                          className="text-text-muted rounded-lg p-1.5 transition-all hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
+                          title="Delete"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
           {mappings.length === 0 && searchTerm && (
             <div className="text-text-muted p-8 text-center text-sm">
               No mappings found matching "{searchTerm}"
