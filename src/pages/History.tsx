@@ -3,25 +3,26 @@ import { Link, useNavigate } from 'react-router-dom';
 import * as chatStorage from '../utils/chatStorage';
 import { type ChatPreview } from '../utils/chatStorage';
 import { ArrowRight, Clock, FileText, Trash2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
+      staggerChildren: 0.08,
     },
   },
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 16 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
       duration: 0.4,
+      ease: 'easeOut',
     },
   },
 };
@@ -76,33 +77,58 @@ const History: FC = () => {
       className="mx-auto max-w-7xl p-4 sm:p-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.4 }}
     >
-      <h1 className="text-text mb-8 text-3xl font-bold">History</h1>
+      <div className="mb-8">
+        <h1 className="text-text text-3xl font-bold">History</h1>
+        <div
+          className="mt-2 h-1 w-16 rounded-full"
+          style={{
+            backgroundImage: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+          }}
+        />
+      </div>
+
       {isPending ? (
-        <div className="text-text-muted py-20 text-center">Loading chats…</div>
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+            <p className="text-text-muted text-sm">Loading chats…</p>
+          </div>
+        </div>
       ) : chats.length === 0 ? (
         <motion.div
-          className="bg-card rounded-2xl border border-gray-200 py-20 text-center dark:border-gray-800"
+          className="card-base py-20 text-center"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.4 }}
         >
-          <Clock size={48} className="text-text-muted mx-auto mb-4" />
-          <h3 className="text-text mb-2 text-xl font-medium">No saved chats</h3>
-          <p className="text-text-muted mb-6">
+          <div
+            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
+            style={{
+              backgroundImage:
+                'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.12))',
+            }}
+          >
+            <Clock size={32} className="text-primary" />
+          </div>
+          <h3 className="text-text mb-2 text-xl font-semibold">
+            No saved chats yet
+          </h3>
+          <p className="text-text-muted mb-6 text-sm">
             Chats you save will appear here for quick access.
           </p>
           <Link
             to="/#upload-section"
-            className="bg-primary rounded-lg px-6 py-2 text-white transition-colors hover:bg-blue-700"
+            className="btn-gradient inline-flex items-center gap-2 text-sm"
           >
             Start New Redaction
+            <ArrowRight size={14} />
           </Link>
         </motion.div>
       ) : (
         <motion.div
-          className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+          className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -138,42 +164,69 @@ const SavedChatItem: FC<{
 
   return (
     <motion.div
-      className="bg-card group relative overflow-hidden rounded-xl border border-gray-200 p-5 shadow-sm transition-all hover:border-blue-300 hover:shadow-md dark:border-gray-800 dark:hover:border-blue-700"
+      className="card-base group relative flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
+      style={
+        { '--tw-ring-color': 'rgba(99,102,241,0.3)' } as React.CSSProperties
+      }
       variants={itemVariants}
+      whileHover={{ boxShadow: '0 8px 30px rgba(99,102,241,0.18)' }}
     >
-      <div className="mb-3 flex items-start justify-between">
-        <div className="flex items-center space-x-2">
-          <FileText size={18} className="text-primary" />
-          <h3 className="text-text text-lg font-semibold">{chat.title}</h3>
-        </div>
-        <div className="text-text-muted flex items-center text-xs">
-          <Clock size={12} className="mr-1" />
-          {saved}
-        </div>
-      </div>
+      {/* Gradient accent bar */}
+      <div
+        className="h-1 w-full shrink-0"
+        style={{ backgroundImage: 'linear-gradient(90deg, #6366F1, #8B5CF6)' }}
+      />
 
-      <div className="relative mb-4">
-        <div className="bg-background text-text-muted max-h-32 overflow-hidden rounded-lg border border-gray-200 p-3 font-mono text-xs dark:border-gray-700">
-          {chat.preview}
-          <div className="absolute bottom-0 left-0 h-12 w-full bg-linear-to-t from-gray-50 to-transparent dark:from-gray-800/50"></div>
+      <div className="flex flex-1 flex-col p-5">
+        <div className="mb-3 flex items-start justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <FileText size={16} className="text-primary shrink-0" />
+            <h3 className="text-text truncate text-base font-semibold">
+              {chat.title}
+            </h3>
+          </div>
+          <div className="text-text-muted flex shrink-0 items-center gap-1 text-xs">
+            <Clock size={11} />
+            {saved}
+          </div>
         </div>
-      </div>
 
-      <div className="mt-auto flex items-center gap-2">
-        <button
-          onClick={() => onLoad(chat)}
-          className="bg-primary flex flex-1 items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-        >
-          Open
-          <ArrowRight size={14} className="ml-1.5" />
-        </button>
-        <button
-          onClick={() => onDelete(chat.id)}
-          className="text-text-muted rounded-lg p-2 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
-          title="Delete"
-        >
-          <Trash2 size={18} />
-        </button>
+        <div className="relative mb-4 grow">
+          <div
+            className="h-24 overflow-hidden rounded-lg border p-3 font-mono text-xs"
+            style={{
+              background: 'var(--color-background)',
+              color: 'var(--color-text-muted)',
+              borderColor: 'var(--color-border)',
+            }}
+          >
+            {chat.preview}
+          </div>
+          <div
+            className="absolute bottom-0 left-0 h-10 w-full rounded-b-lg"
+            style={{
+              background:
+                'linear-gradient(to top, var(--color-background), transparent)',
+            }}
+          />
+        </div>
+
+        <div className="mt-auto flex items-center gap-2">
+          <button
+            onClick={() => onLoad(chat)}
+            className="btn-gradient flex flex-1 items-center justify-center gap-2 py-2 text-sm"
+          >
+            Open
+            <ArrowRight size={13} />
+          </button>
+          <button
+            onClick={() => onDelete(chat.id)}
+            className="text-text-muted rounded-lg p-2 transition-all hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
+            title="Delete"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       </div>
     </motion.div>
   );

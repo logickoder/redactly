@@ -8,7 +8,6 @@ import { useAppSettings } from '../hooks/useStore.ts';
 import SEO from './SEO';
 
 const Layout: FC = () => {
-  const iconClass = 'w-5 h-5 text-text-muted';
   const { isDarkMode, toggleDarkMode } = useAppSettings();
 
   useEffect(() => {
@@ -22,38 +21,53 @@ const Layout: FC = () => {
   return (
     <div className="flex min-h-screen flex-col font-sans">
       <SEO />
-      <nav className="bg-card/80 sticky top-0 z-50 w-full border-b border-gray-200 backdrop-blur-md dark:border-gray-800">
+      <nav
+        className="sticky top-0 z-50 w-full border-b backdrop-blur-xl"
+        style={{
+          backgroundColor:
+            'color-mix(in srgb, var(--color-card) 80%, transparent)',
+          borderColor: 'var(--color-border)',
+        }}
+      >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-24 flex-col items-center justify-center sm:h-16 sm:flex-row sm:justify-between">
+          <div className="flex h-16 items-center justify-between">
             <Link
               to="/"
-              className="text-primary shrink-0 text-2xl font-bold tracking-tight"
+              className="gradient-text shrink-0 text-2xl font-bold tracking-tight"
             >
               Redactly
             </Link>
 
-            <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4">
-              <TrailingIcon action="/mappings" label="Name Mappings">
-                <Users size={20} />
-              </TrailingIcon>
-              <TrailingIcon action="/history" label="History">
-                <History size={20} />
-              </TrailingIcon>
-              <TrailingIcon action={toggleDarkMode} label="Toggle theme">
-                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-              </TrailingIcon>
-              <TrailingIcon action="/feedback" label="Feedback">
-                <MessageSquare size={20} />
-              </TrailingIcon>
-              <TrailingIcon action="https://x.com/logickoder" label="Twitter">
-                <ReactSVG src={Twitter} className={iconClass} wrapper="svg" />
-              </TrailingIcon>
-              <TrailingIcon
+            <div className="flex items-center space-x-1">
+              <NavIcon action="/mappings" label="Name Mappings">
+                <Users size={18} />
+              </NavIcon>
+              <NavIcon action="/history" label="History">
+                <History size={18} />
+              </NavIcon>
+              <NavIcon action={toggleDarkMode} label="Toggle theme">
+                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+              </NavIcon>
+              <NavIcon action="/feedback" label="Feedback">
+                <MessageSquare size={18} />
+              </NavIcon>
+              <NavIcon action="https://x.com/logickoder" label="Twitter">
+                <ReactSVG
+                  src={Twitter}
+                  className="text-text-muted h-4 w-4"
+                  wrapper="svg"
+                />
+              </NavIcon>
+              <NavIcon
                 action="https://github.com/logickoder/redactly"
                 label="GitHub"
               >
-                <ReactSVG src={Github} className={iconClass} wrapper="svg" />
-              </TrailingIcon>
+                <ReactSVG
+                  src={Github}
+                  className="text-text-muted h-4 w-4"
+                  wrapper="svg"
+                />
+              </NavIcon>
             </div>
           </div>
         </div>
@@ -63,19 +77,31 @@ const Layout: FC = () => {
         <Outlet />
       </main>
 
-      <footer className="bg-card border-t border-gray-200 py-8 dark:border-gray-800">
+      <footer
+        className="border-t py-8"
+        style={{
+          backgroundColor: 'var(--color-card)',
+          borderColor: 'var(--color-border)',
+        }}
+      >
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:px-6 md:flex-row lg:px-8">
           <a
             href="https://logickoder.dev"
             target="_blank"
-            className="text-text-muted text-sm"
+            className="text-text-muted hover:text-primary text-sm transition-colors"
           >
-            &copy; {new Date().getFullYear()} Jeffery Orazulike. All rights
-            reserved.
+            © {new Date().getFullYear()} Jeffery Orazulike. All rights reserved.
           </a>
 
-          <div className="bg-primary/10 text-primary border-primary/20 rounded-full border px-3 py-1 text-xs font-medium">
-            text processing
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white"
+              style={{
+                backgroundImage: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+              }}
+            >
+              🔒 100% Client-Side
+            </span>
           </div>
         </div>
       </footer>
@@ -83,7 +109,7 @@ const Layout: FC = () => {
   );
 };
 
-const TrailingIcon: FC<{
+const NavIcon: FC<{
   action: string | (() => void);
   label?: string;
   children: ReactNode;
@@ -96,7 +122,7 @@ const TrailingIcon: FC<{
       onClick={isLink ? undefined : action}
       // @ts-expect-error TS doesn't like dynamic 'to' prop
       to={isLink ? action : undefined}
-      className="text-text-muted hover:text-primary rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+      className="text-text-muted hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/15 rounded-xl p-2 transition-all"
       aria-label={label}
       target={isExternalLink ? '_blank' : undefined}
       rel={isExternalLink ? 'noopener noreferrer' : undefined}

@@ -14,9 +14,32 @@ interface ToastContainerProps {
 }
 
 const toastVariants = {
-  initial: { opacity: 0, y: -20, scale: 0.9 },
-  animate: { opacity: 1, y: 0, scale: 1 },
-  exit: { opacity: 0, y: -20, scale: 0.9, transition: { duration: 0.2 } },
+  initial: { opacity: 0, x: 48, scale: 0.94 },
+  animate: {
+    opacity: 1,
+    x: 0,
+    scale: 1,
+    transition: { duration: 0.25, ease: 'easeOut' },
+  },
+  exit: { opacity: 0, x: 48, scale: 0.94, transition: { duration: 0.2 } },
+};
+
+const config = {
+  success: {
+    icon: <CheckCircle className="h-4 w-4" style={{ color: '#10B981' }} />,
+    accent: '#10B981',
+    label: 'Success',
+  },
+  error: {
+    icon: <AlertCircle className="h-4 w-4" style={{ color: '#EF4444' }} />,
+    accent: '#EF4444',
+    label: 'Error',
+  },
+  info: {
+    icon: <Info className="h-4 w-4" style={{ color: '#6366F1' }} />,
+    accent: '#6366F1',
+    label: 'Info',
+  },
 };
 
 const Toast: FC<ToastProps> = ({ toast, remove }) => {
@@ -26,19 +49,9 @@ const Toast: FC<ToastProps> = ({ toast, remove }) => {
     }, toast.duration);
     return () => clearTimeout(timer);
   }, [toast, remove]);
-  const icons = {
-    success: (
-      <CheckCircle className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
-    ),
-    error: <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400" />,
-    info: <Info className="h-5 w-5 text-blue-600 dark:text-blue-500" />,
-  };
-  const bgColors = {
-    success:
-      'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800',
-    error: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
-    info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
-  };
+
+  const { icon, accent } = config[toast.type];
+
   return (
     <motion.div
       layout
@@ -46,21 +59,28 @@ const Toast: FC<ToastProps> = ({ toast, remove }) => {
       initial="initial"
       animate="animate"
       exit="exit"
-      className={`mb-3 flex w-full max-w-sm items-center rounded-lg border p-4 shadow-lg backdrop-blur-sm ${bgColors[toast.type]} `}
+      className="mb-2.5 flex w-full max-w-sm items-center overflow-hidden rounded-xl shadow-lg"
+      style={{
+        backgroundColor: 'var(--color-card)',
+        border: `1px solid ${accent}30`,
+        borderLeft: `3px solid ${accent}`,
+      }}
       role="alert"
     >
-      <div className="shrink-0">{icons[toast.type]}</div>
-      <div className="ml-3 flex-1 text-sm font-medium text-slate-900 dark:text-slate-100">
-        {toast.message}
+      <div className="flex flex-1 items-center gap-3 p-4">
+        <div className="shrink-0">{icon}</div>
+        <p className="text-text flex-1 text-sm leading-snug font-medium">
+          {toast.message}
+        </p>
+        <button
+          type="button"
+          className="text-text-muted -my-1 -mr-1 ml-2 shrink-0 rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-white/10"
+          onClick={() => remove(toast.id)}
+          aria-label="Close"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
       </div>
-      <button
-        type="button"
-        className="-mx-1.5 -my-1.5 ml-auto inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg p-1.5 text-slate-500 transition-colors hover:text-slate-900 focus:ring-2 focus:ring-slate-300 dark:text-slate-400 dark:hover:text-slate-100 dark:focus:ring-slate-600"
-        onClick={() => remove(toast.id)}
-        aria-label="Close"
-      >
-        <X className="h-4 w-4" />
-      </button>
     </motion.div>
   );
 };

@@ -1,7 +1,7 @@
 import { type FC, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { type Message, parseChat } from '../utils/chatParser';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useAppSettings } from '../hooks/useStore';
 import * as chatStorage from '../utils/chatStorage';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -30,14 +30,11 @@ const Redact: FC = () => {
     useState<boolean>(false);
   const [isParsing, setIsParsing] = useState<boolean>(false);
 
-  // Debounce timer ref
   const aliasDebounceTimer = useRef<number | null>(null);
 
-  // Date filtering
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
 
-  // Save Modal State
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [defaultChatName, setDefaultChatName] = useState('');
 
@@ -48,35 +45,28 @@ const Redact: FC = () => {
 
     const start = startDate ? new Date(startDate) : null;
     const end = endDate ? new Date(endDate) : null;
-    // Adjust end date to include the full day
     if (end) end.setHours(23, 59, 59, 999);
 
     return parsedMessages
       .filter((msg) => {
-        if (!msg.date) return true; // Keep messages with unknown dates? Or drop? Let's keep.
+        if (!msg.date) return true;
         if (start && msg.date < start) return false;
         return !(end && msg.date > end);
       })
       .map((msg) => {
         let redactedLine = msg.originalString;
 
-        // Apply all debounced aliases to the line
         Object.entries(debouncedAliases).forEach(([name, aliasName]) => {
-          // Escape special regex characters in name
           const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          // Use a global regex to replace all occurrences
           redactedLine = redactedLine.replace(
             new RegExp(escapedName, 'gi'),
             aliasName,
           );
 
           if (aggressiveRedaction) {
-            // Split name into parts (words)
-            const parts = name.split(/\s+/).filter((p) => p.length > 2); // Only redact parts longer than 2 chars to avoid replacing common short words
+            const parts = name.split(/\s+/).filter((p) => p.length > 2);
             parts.forEach((part) => {
               const escapedPart = part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-              // Replace whole words only to avoid replacing parts of other words
-              // \b matches word boundary
               redactedLine = redactedLine.replace(
                 new RegExp(`\\b${escapedPart}\\b`, 'gi'),
                 aliasName,
@@ -102,25 +92,22 @@ const Redact: FC = () => {
     setIsParsing(true);
 
     try {
-      // Use setTimeout to allow UI to update before heavy parsing
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       const result = parseChat(text, dateFormat);
       setParsedMessages(result.messages);
       setParticipants(result.participants);
 
-      // Generate aliases, preferring stored ones
       const newAliases: Record<string, string> = {};
       result.participants.forEach((p, index) => {
         if (nameMap[p]) {
           newAliases[p] = nameMap[p];
         } else {
-          newAliases[p] = `User ${String.fromCharCode(65 + index)}`; // User A, User B...
+          newAliases[p] = `User ${String.fromCharCode(65 + index)}`;
         }
       });
       setAliases(newAliases);
 
-      // Set default date range
       if (result.messages.length > 0) {
         const first = result.messages[0].date;
         const last = result.messages[result.messages.length - 1].date;
@@ -149,19 +136,15 @@ const Redact: FC = () => {
     setAliases((prev) => ({ ...prev, [original]: newAlias }));
   };
 
-  // Debounce alias changes to prevent excessive recomputation
   useEffect(() => {
-    // Clear existing timer
     if (aliasDebounceTimer.current) {
       clearTimeout(aliasDebounceTimer.current);
     }
 
-    // Set new timer to update debounced aliases after 1 second
     aliasDebounceTimer.current = setTimeout(() => {
       setDebouncedAliases(aliases);
     }, 1000);
 
-    // Cleanup on unmount
     return () => {
       if (aliasDebounceTimer.current) {
         clearTimeout(aliasDebounceTimer.current);
@@ -193,7 +176,6 @@ const Redact: FC = () => {
   };
 
   const handleSaveClick = () => {
-    // Generate default name
     let name = participants.join(', ');
     if (name.length > 50) {
       name = name.substring(0, 47) + '...';
@@ -210,7 +192,6 @@ const Redact: FC = () => {
     let finalName = name;
     let counter = 1;
 
-    // Check for duplicates without needing Zustand state
     const existingPreviews = await chatStorage.getAllChatPreviews();
     while (existingPreviews.some((chat) => chat.title === finalName)) {
       finalName = `${name} (${counter})`;
@@ -242,12 +223,8 @@ const Redact: FC = () => {
       handleParse(location.state.fileContent);
       hasInitialized.current = true;
     } else if (location.state?.savedChat) {
-      // Load from history
       const saved = location.state.savedChat;
       setContent(saved.originalContent || '');
-      // We might want to just set the redacted content directly if we don't have original
-      // But for now let's assume we re-parse or just show the result.
-      // If we have original content, let's re-parse it to allow editing.
       if (saved.originalContent) {
         handleParse(saved.originalContent);
       }
@@ -260,29 +237,60 @@ const Redact: FC = () => {
       className="mx-auto max-w-7xl p-4 sm:p-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.4 }}
     >
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-text hidden text-3xl font-bold sm:block">
           Redact Chat
         </h1>
-        <div className="flex grow items-center justify-center space-x-2 text-sm sm:grow-0 sm:justify-start">
+
+        {/* Step pills */}
+        <div className="flex grow items-center justify-center gap-2 text-sm sm:grow-0 sm:justify-start">
           {steps.map((s, index) => (
             <Fragment key={s}>
-              <span
-                className={`rounded-full px-3 py-1 transition-colors duration-300 ${step === index ? 'bg-primary text-white' : 'text-text-muted bg-gray-200 dark:bg-gray-800'}`}
-              >
-                {index + 1}. {s}
-              </span>
+              <div className="flex items-center gap-1.5">
+                {step > index ? (
+                  <CheckCircle2 size={14} className="text-primary shrink-0" />
+                ) : (
+                  <span
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                      step === index
+                        ? 'text-white'
+                        : 'text-text-muted bg-gray-200 dark:bg-white/10'
+                    }`}
+                    style={
+                      step === index
+                        ? {
+                            backgroundImage:
+                              'linear-gradient(135deg, #6366F1, #8B5CF6)',
+                          }
+                        : {}
+                    }
+                  >
+                    {index + 1}
+                  </span>
+                )}
+                <span
+                  className={`font-medium transition-colors ${
+                    step === index
+                      ? 'text-primary'
+                      : step > index
+                        ? 'text-primary/70'
+                        : 'text-text-muted'
+                  }`}
+                >
+                  {s}
+                </span>
+              </div>
               {index < steps.length - 1 && (
-                <ArrowRight size={16} className="text-text-muted" />
+                <ArrowRight size={14} className="text-text-muted shrink-0" />
               )}
             </Fragment>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="space-y-6">
           <RedactInput
             content={content}

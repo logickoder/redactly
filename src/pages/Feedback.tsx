@@ -7,6 +7,7 @@ const Feedback: FC = () => {
   const toast = useToast();
   const [isPending, startTransition] = useTransition();
   const [rating, setRating] = useState<number>(0);
+  const [hoveredStar, setHoveredStar] = useState<number>(0);
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
 
@@ -63,70 +64,88 @@ const Feedback: FC = () => {
       className="mx-auto max-w-2xl p-4 sm:p-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.4 }}
     >
       <div className="mb-8 text-center">
-        <h1 className="mb-2 text-3xl font-bold text-slate-900 dark:text-white">
+        <div
+          className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+          style={{
+            backgroundImage:
+              'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.12))',
+          }}
+        >
+          <MessageSquare size={26} className="text-primary" />
+        </div>
+        <h1 className="text-text mb-2 text-3xl font-bold">
           We value your feedback
         </h1>
-        <p className="text-slate-600 dark:text-slate-400">
+        <p className="text-text-muted">
           Help us improve Redactly by sharing your thoughts and suggestions.
         </p>
       </div>
 
       <motion.div
-        className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 dark:border-slate-700 dark:bg-slate-800"
-        initial={{ scale: 0.95 }}
+        className="card-base p-6 sm:p-8"
+        initial={{ scale: 0.97 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.1 }}
       >
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex flex-col items-center space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          {/* Star Rating */}
+          <div className="flex flex-col items-center gap-2">
+            <label className="text-text text-sm font-medium">
               How would you rate your experience?
             </label>
-            <div className="flex space-x-2">
+            <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
                   type="button"
                   onClick={() => setRating(star)}
-                  className={`p-1 transition-colors ${
-                    rating >= star
-                      ? 'fill-yellow-400 text-yellow-400'
-                      : 'text-slate-300 dark:text-slate-600'
-                  }`}
+                  onMouseEnter={() => setHoveredStar(star)}
+                  onMouseLeave={() => setHoveredStar(0)}
+                  className="p-1 transition-transform hover:scale-110"
                 >
                   <Star
-                    size={32}
-                    fill={rating >= star ? 'currentColor' : 'none'}
+                    size={34}
+                    className={`transition-colors ${
+                      (hoveredStar || rating) >= star
+                        ? 'text-yellow-400'
+                        : 'text-text-muted'
+                    }`}
+                    fill={
+                      (hoveredStar || rating) >= star ? 'currentColor' : 'none'
+                    }
                   />
                 </button>
               ))}
             </div>
           </div>
 
+          {/* Email */}
           <div>
             <label
               htmlFor="email"
-              className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
+              className="text-text mb-1.5 block text-sm font-medium"
             >
-              Email (optional)
+              Email{' '}
+              <span className="text-text-muted font-normal">(optional)</span>
             </label>
             <input
               type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-slate-900 transition-all focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+              className="input-base w-full"
               placeholder="your@email.com"
             />
           </div>
 
+          {/* Message */}
           <div>
             <label
               htmlFor="message"
-              className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
+              className="text-text mb-1.5 block text-sm font-medium"
             >
               Message
             </label>
@@ -135,7 +154,7 @@ const Feedback: FC = () => {
               rows={5}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full resize-none rounded-lg border border-slate-200 bg-white px-4 py-2 text-slate-900 transition-all focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+              className="input-base w-full resize-none leading-relaxed"
               placeholder="Tell us what you think..."
               required
             />
@@ -144,25 +163,25 @@ const Feedback: FC = () => {
           <button
             type="submit"
             disabled={isPending}
-            className="flex w-full items-center justify-center rounded-xl bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-lg shadow-blue-600/20 transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+            className="btn-gradient flex w-full items-center justify-center gap-2"
           >
-            <Send size={20} className="mr-2" />
+            <Send size={18} />
             {isPending ? 'Sending...' : 'Send Feedback'}
           </button>
         </form>
       </motion.div>
 
-      <div className="mt-8 text-center">
-        <p className="flex items-center justify-center text-sm text-slate-500 dark:text-slate-400">
-          <MessageSquare size={16} className="mr-2" />
+      <div className="mt-6 text-center">
+        <p className="text-text-muted flex items-center justify-center gap-1.5 text-sm">
+          <MessageSquare size={14} />
           You can also reach out directly on{' '}
           <a
             href="https://x.com/logickoder"
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-1 text-blue-600 hover:underline dark:text-blue-400"
+            className="text-primary font-medium hover:underline"
           >
-            X
+            X (Twitter)
           </a>
         </p>
       </div>

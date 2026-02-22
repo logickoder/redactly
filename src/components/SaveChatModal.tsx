@@ -39,35 +39,58 @@ const SaveChatModal: FC<SaveChatModalProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+          style={{ background: 'rgba(0,0,0,0.5)' }}
+        >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-slate-800"
+            initial={{ opacity: 0, scale: 0.93, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.93, y: 10 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="card-base w-full max-w-md overflow-hidden"
           >
+            {/* Gradient header bar */}
+            <div
+              className="h-1 w-full"
+              style={{
+                backgroundImage: 'linear-gradient(90deg, #6366F1, #8B5CF6)',
+              }}
+            />
+
             <div className="p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  Save Conversation
-                </h3>
+              <div className="mb-5 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="flex h-8 w-8 items-center justify-center rounded-lg"
+                    style={{
+                      backgroundImage:
+                        'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15))',
+                    }}
+                  >
+                    <Save size={15} className="text-primary" />
+                  </div>
+                  <h3 className="text-text text-base font-semibold">
+                    Save Conversation
+                  </h3>
+                </div>
                 <button
                   onClick={onClose}
-                  className="text-slate-500 transition-colors hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                  className="text-text-muted rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-white/10"
                 >
-                  <X size={20} />
+                  <X size={18} />
                 </button>
               </div>
 
               <div className="mb-6">
-                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                <label className="text-text mb-1.5 block text-sm font-medium">
                   Conversation Name
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                  className="input-base w-full"
                   placeholder="Enter a name..."
                   autoFocus
                   onKeyDown={(e) => {
@@ -75,24 +98,24 @@ const SaveChatModal: FC<SaveChatModalProps> = ({
                     if (e.key === 'Escape') onClose();
                   }}
                 />
-                {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
-                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                  This will be saved to your local history.
+                {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
+                <p className="text-text-muted mt-2 text-xs">
+                  This will be saved locally to your History.
                 </p>
               </div>
 
-              <div className="flex justify-end space-x-3">
+              <div className="flex justify-end gap-3">
                 <button
                   onClick={onClose}
-                  className="rounded-lg px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+                  className="text-text-muted rounded-xl px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/10"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
-                  className="flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                  className="btn-gradient flex items-center gap-2 py-2 text-sm"
                 >
-                  <Save size={16} className="mr-2" />
+                  <Save size={14} />
                   Save
                 </button>
               </div>

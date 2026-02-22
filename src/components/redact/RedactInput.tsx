@@ -35,28 +35,28 @@ const RedactInput: FC<RedactInputProps> = ({
 
   return (
     <motion.div
-      className={`bg-card rounded-2xl border border-gray-200 p-6 shadow-sm dark:border-gray-800 ${step !== 1 ? 'opacity-80' : ''}`}
+      className={`card-base p-6 transition-opacity ${step !== 0 ? 'opacity-75' : ''}`}
       layout
     >
       <div className="mb-4 flex items-center justify-between">
         <label
           htmlFor="chat-content"
-          className="text-text block text-lg font-semibold"
+          className="text-text block text-base font-semibold"
         >
           Original Chat Content
         </label>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className="text-text-muted hover:text-primary p-2 transition-colors"
+            className={`rounded-lg p-2 transition-all ${showSettings ? 'text-primary bg-primary/10' : 'text-text-muted hover:text-primary hover:bg-primary/10'}`}
             title="Settings"
           >
-            <Settings size={18} />
+            <Settings size={16} />
           </button>
           {step > 1 && (
             <button
               onClick={() => setStep(0)}
-              className="text-primary text-sm hover:underline"
+              className="text-primary hover:bg-primary/10 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
             >
               Edit
             </button>
@@ -72,7 +72,13 @@ const RedactInput: FC<RedactInputProps> = ({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="mb-4 space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+            <div
+              className="mb-4 space-y-4 rounded-xl border p-4"
+              style={{
+                background: 'rgba(99,102,241,0.05)',
+                borderColor: 'var(--color-border)',
+              }}
+            >
               <div>
                 <label className="text-text mb-2 block text-sm font-medium">
                   Date Format
@@ -81,52 +87,60 @@ const RedactInput: FC<RedactInputProps> = ({
                   type="text"
                   value={dateFormat}
                   onChange={(e) => setDateFormat(e.target.value)}
-                  className="bg-background text-text focus:ring-primary w-full rounded-lg border border-gray-200 p-2 text-sm focus:ring-2 focus:outline-none dark:border-gray-700"
+                  className="input-base w-full"
                   placeholder="dd/MM/yyyy"
                 />
-                <p className="text-text-muted mt-1 text-xs">
+                <p className="text-text-muted mt-1.5 text-xs">
                   Use d, M, y, H, m, s tokens. Example: dd/MM/yyyy or MM/dd/yy
                 </p>
               </div>
 
-              <div className="flex items-center">
-                <input
-                  id="aggressive-redaction"
-                  type="checkbox"
-                  checked={aggressiveRedaction}
-                  onChange={(e) => setAggressiveRedaction(e.target.checked)}
-                  className="text-primary focus:ring-primary h-4 w-4 rounded border-gray-300"
-                />
-                <label
-                  htmlFor="aggressive-redaction"
-                  className="text-text ml-2 block text-sm"
-                >
-                  Aggressive Redaction (Redact name parts within messages)
-                </label>
+              <div className="flex items-start gap-3">
+                <div className="relative mt-0.5 flex shrink-0 items-center">
+                  <input
+                    id="aggressive-redaction"
+                    type="checkbox"
+                    checked={aggressiveRedaction}
+                    onChange={(e) => setAggressiveRedaction(e.target.checked)}
+                    className="accent-primary h-4 w-4 cursor-pointer rounded"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="aggressive-redaction"
+                    className="text-text block cursor-pointer text-sm font-medium"
+                  >
+                    Aggressive Redaction
+                  </label>
+                  <p className="text-text-muted mt-0.5 text-xs">
+                    Also redacts name parts (e.g. "Ebuka" from "King Ebuka")
+                    found inside messages.
+                  </p>
+                </div>
               </div>
-              <p className="text-text-muted pl-6 text-xs">
-                If checked, parts of the name (e.g., "Ebuka" from "King Ebuka")
-                found in the message text will also be replaced with the alias.
-              </p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {step === 0 ? (
-        // Editable textarea when in step 0
         <textarea
           id="chat-content"
-          className="bg-background text-text focus:ring-primary h-64 w-full resize-none rounded-xl border border-gray-200 p-4 font-mono text-sm transition-all focus:ring-2 focus:outline-none dark:border-gray-700"
+          className="input-base h-64 w-full resize-none font-mono leading-relaxed"
+          style={{ borderRadius: '0.75rem' }}
           placeholder="Paste your WhatsApp chat export here..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
       ) : (
-        // Virtualized read-only view when parsed
         <div
           ref={ref}
-          className="bg-background text-text h-64 w-full overflow-auto rounded-xl border border-gray-200 p-4 font-mono text-sm dark:border-gray-700"
+          className="h-64 w-full overflow-auto rounded-xl border p-4 font-mono text-sm"
+          style={{
+            background: 'var(--color-background)',
+            color: 'var(--color-text)',
+            borderColor: 'var(--color-border)',
+          }}
         >
           <div
             style={{
@@ -163,12 +177,9 @@ const RedactInput: FC<RedactInputProps> = ({
           <button
             onClick={() => handleParse(content)}
             disabled={!content.trim() || isParsing}
-            className="bg-primary flex items-center rounded-lg px-6 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-gradient flex items-center gap-2"
           >
-            <RefreshCw
-              size={18}
-              className={`mr-2 ${isParsing ? 'animate-spin' : ''}`}
-            />
+            <RefreshCw size={16} className={isParsing ? 'animate-spin' : ''} />
             {isParsing ? 'Parsing...' : 'Parse Chat'}
           </button>
         </div>
