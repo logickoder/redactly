@@ -2,7 +2,8 @@ import { type FC, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { type Message, parseChat } from '../utils/chatParser';
 import { ArrowRight } from 'lucide-react';
-import { useAppStore } from '../store/useAppStore';
+import { useAppSettings } from '../hooks/useStore';
+import * as chatStorage from '../utils/chatStorage';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useToast } from '../context/ToastContext';
 import RedactInput from '../components/redact/RedactInput';
@@ -13,23 +14,24 @@ import SaveChatModal from '../components/SaveChatModal';
 const Redact: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const {
-    dateFormat,
-    setDateFormat,
-    nameMap,
-    updateNameMap,
-    saveChat,
-    savedChats,
-  } = useAppStore();
+  const { dateFormat, setDateFormat, nameMap, updateNameMap } =
+    useAppSettings();
   const toast = useToast();
 
   const [content, setContent] = useState<string>('');
   const [parsedMessages, setParsedMessages] = useState<Message[]>([]);
   const [participants, setParticipants] = useState<string[]>([]);
   const [aliases, setAliases] = useState<Record<string, string>>({});
+  const [debouncedAliases, setDebouncedAliases] = useState<
+    Record<string, string>
+  >({});
   const [step, setStep] = useState<number>(0);
   const [aggressiveRedaction, setAggressiveRedaction] =
     useState<boolean>(false);
+  const [isParsing, setIsParsing] = useState<boolean>(false);
+
+  // Debounce timer ref
+  const aliasDebounceTimer = useRef<number | null>(null);
 
   // Date filtering
   const [startDate, setStartDate] = useState<string>('');
@@ -58,8 +60,8 @@ const Redact: FC = () => {
       .map((msg) => {
         let redactedLine = msg.originalString;
 
-        // Apply all aliases to the line
-        Object.entries(aliases).forEach(([name, aliasName]) => {
+        // Apply all debounced aliases to the line
+        Object.entries(debouncedAliases).forEach(([name, aliasName]) => {
           // Escape special regex characters in name
           const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           // Use a global regex to replace all occurrences
@@ -86,45 +88,86 @@ const Redact: FC = () => {
         return redactedLine;
       })
       .join('\n');
-  }, [parsedMessages, aliases, startDate, endDate, aggressiveRedaction]);
+  }, [
+    parsedMessages,
+    debouncedAliases,
+    startDate,
+    endDate,
+    aggressiveRedaction,
+  ]);
 
   const steps = useMemo(() => ['Input', 'Configure', 'Export'], []);
 
-  const handleParse = (text: string) => {
-    const result = parseChat(text, dateFormat);
-    setParsedMessages(result.messages);
-    setParticipants(result.participants);
+  const handleParse = async (text: string) => {
+    setIsParsing(true);
 
-    // Generate aliases, preferring stored ones
-    const newAliases: Record<string, string> = {};
-    result.participants.forEach((p, index) => {
-      if (nameMap[p]) {
-        newAliases[p] = nameMap[p];
-      } else {
-        newAliases[p] = `User ${String.fromCharCode(65 + index)}`; // User A, User B...
+    try {
+      // Use setTimeout to allow UI to update before heavy parsing
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      const result = parseChat(text, dateFormat);
+      setParsedMessages(result.messages);
+      setParticipants(result.participants);
+
+      // Generate aliases, preferring stored ones
+      const newAliases: Record<string, string> = {};
+      result.participants.forEach((p, index) => {
+        if (nameMap[p]) {
+          newAliases[p] = nameMap[p];
+        } else {
+          newAliases[p] = `User ${String.fromCharCode(65 + index)}`; // User A, User B...
+        }
+      });
+      setAliases(newAliases);
+
+      // Set default date range
+      if (result.messages.length > 0) {
+        const first = result.messages[0].date;
+        const last = result.messages[result.messages.length - 1].date;
+        if (first) setStartDate(first.toISOString().split('T')[0]);
+        if (last) setEndDate(last.toISOString().split('T')[0]);
       }
-    });
-    setAliases(newAliases);
 
-    // Set default date range
-    if (result.messages.length > 0) {
-      const first = result.messages[0].date;
-      const last = result.messages[result.messages.length - 1].date;
-      if (first) setStartDate(first.toISOString().split('T')[0]);
-      if (last) setEndDate(last.toISOString().split('T')[0]);
-    }
-
-    if (result.messages.length > 0) {
-      setStep(1);
-      toast.show('Chat parsed successfully!', 'success');
-    } else {
-      toast.show('No messages found. Please check the format.', 'error');
+      if (result.messages.length > 0) {
+        setStep(1);
+        toast.show(
+          `Chat parsed successfully! ${result.messages.length} messages found.`,
+          'success',
+        );
+      } else {
+        toast.show('No messages found. Please check the format.', 'error');
+      }
+    } catch (error) {
+      console.error('Parsing error:', error);
+      toast.show('Error parsing chat. Please check the format.', 'error');
+    } finally {
+      setIsParsing(false);
     }
   };
 
   const handleAliasChange = (original: string, newAlias: string) => {
     setAliases((prev) => ({ ...prev, [original]: newAlias }));
   };
+
+  // Debounce alias changes to prevent excessive recomputation
+  useEffect(() => {
+    // Clear existing timer
+    if (aliasDebounceTimer.current) {
+      clearTimeout(aliasDebounceTimer.current);
+    }
+
+    // Set new timer to update debounced aliases after 1 second
+    aliasDebounceTimer.current = setTimeout(() => {
+      setDebouncedAliases(aliases);
+    }, 1000);
+
+    // Cleanup on unmount
+    return () => {
+      if (aliasDebounceTimer.current) {
+        clearTimeout(aliasDebounceTimer.current);
+      }
+    };
+  }, [aliases]);
 
   const saveAliasToMap = (original: string, alias: string) => {
     updateNameMap(original, alias);
@@ -163,33 +206,38 @@ const Redact: FC = () => {
     setIsSaveModalOpen(true);
   };
 
-  const handleSaveConfirm = (name: string) => {
+  const handleSaveConfirm = async (name: string) => {
     let finalName = name;
     let counter = 1;
 
-    // Check for duplicates and append (n) if needed
-    while (savedChats.some((chat) => chat.title === finalName)) {
+    // Check for duplicates without needing Zustand state
+    const existingPreviews = await chatStorage.getAllChatPreviews();
+    while (existingPreviews.some((chat) => chat.title === finalName)) {
       finalName = `${name} (${counter})`;
       counter++;
     }
 
-    saveChat({
-      id: crypto.randomUUID(),
-      title: finalName,
-      date: new Date().toISOString(),
-      content: redactedContent,
-      originalContent: content,
-    });
+    try {
+      await chatStorage.saveChat({
+        id: crypto.randomUUID(),
+        title: finalName,
+        date: new Date().toISOString(),
+        content: redactedContent,
+        originalContent: content,
+      });
 
-    toast.show('Chat saved successfully!', 'success');
-    navigate('/history');
+      toast.show('Chat saved successfully!', 'success');
+      navigate('/history');
+    } catch (error) {
+      console.error('Error saving chat:', error);
+      toast.show('Failed to save chat', 'error');
+    }
   };
 
   useEffect(() => {
     if (hasInitialized.current) return;
 
     if (location.state?.fileContent) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setContent(location.state.fileContent);
       handleParse(location.state.fileContent);
       hasInitialized.current = true;
@@ -246,6 +294,7 @@ const Redact: FC = () => {
             setDateFormat={setDateFormat}
             aggressiveRedaction={aggressiveRedaction}
             setAggressiveRedaction={setAggressiveRedaction}
+            isParsing={isParsing}
           />
 
           <AnimatePresence>

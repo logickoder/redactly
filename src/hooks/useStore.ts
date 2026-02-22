@@ -1,15 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-export interface SavedChat {
-  id: string;
-  title: string;
-  date: string; // ISO string of when it was saved
-  content: string; // Redacted content
-  originalContent?: string; // Optional: if we want to allow reloading the original
-}
-
-interface AppState {
+interface AppSettingsState {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
 
@@ -19,13 +11,9 @@ interface AppState {
   nameMap: Record<string, string>;
   updateNameMap: (name: string, alias: string) => void;
   deleteNameMapping: (name: string) => void;
-
-  savedChats: SavedChat[];
-  saveChat: (chat: SavedChat) => void;
-  deleteChat: (id: string) => void;
 }
 
-export const useAppStore = create<AppState>()(
+export const useAppSettings = create<AppSettingsState>()(
   persist(
     (set) => ({
       isDarkMode:
@@ -41,7 +29,7 @@ export const useAppStore = create<AppState>()(
       nameMap: {},
       updateNameMap: (name, alias) =>
         set((state) => ({
-          nameMap: { ...state.nameMap, [name]: alias }
+          nameMap: { ...state.nameMap, [name]: alias },
         })),
       deleteNameMapping: (name) =>
         set((state) => {
@@ -49,20 +37,10 @@ export const useAppStore = create<AppState>()(
           delete newMap[name];
           return { nameMap: newMap };
         }),
-
-      savedChats: [],
-      saveChat: (chat) =>
-        set((state) => ({
-          savedChats: [chat, ...state.savedChats.filter((c) => c.id !== chat.id)]
-        })),
-      deleteChat: (id) =>
-        set((state) => ({
-          savedChats: state.savedChats.filter((c) => c.id !== id)
-        }))
     }),
     {
-      name: 'redactly-storage',
-      storage: createJSONStorage(() => localStorage)
-    }
-  )
+      name: 'redactly-settings',
+      storage: createJSONStorage(() => localStorage),
+    },
+  ),
 );

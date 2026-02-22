@@ -14,7 +14,10 @@ export interface ParseResult {
 const CHAT_REGEX =
   /^\s*\[?(\d{1,2}[/.-]\d{1,2}(?:[/.-]\d{2,4})?),?\s*(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[APap][Mm])?)]?(?:\s*-\s*|\s+)(.*?):\s(.*)/;
 
-export const parseChat = (text: string, dateFormat: string = 'dd/MM/yyyy'): ParseResult => {
+export const parseChat = (
+  text: string,
+  dateFormat: string = 'dd/MM/yyyy',
+): ParseResult => {
   const lines = text.split('\n');
   const messages: Message[] = [];
   const participants = new Set<string>();
@@ -43,11 +46,9 @@ export const parseChat = (text: string, dateFormat: string = 'dd/MM/yyyy'): Pars
         date,
         sender,
         content,
-        originalString: line
+        originalString: line,
       };
     } else {
-      console.log('Line:', line);
-      console.log('Match:', match);
       // If it's a continuation of the previous message
       if (currentMessage) {
         currentMessage.content += '\n' + line;
@@ -63,11 +64,15 @@ export const parseChat = (text: string, dateFormat: string = 'dd/MM/yyyy'): Pars
 
   return {
     messages,
-    participants: Array.from(participants)
+    participants: Array.from(participants),
   };
 };
 
-const parseDate = (dateStr: string, timeStr: string, format: string): Date | null => {
+const parseDate = (
+  dateStr: string,
+  timeStr: string,
+  format: string,
+): Date | null => {
   try {
     // Remove brackets and other noise if needed
     const cleanDate = dateStr.replace(/[[\]]/g, '');
@@ -110,7 +115,9 @@ const parseDate = (dateStr: string, timeStr: string, format: string): Date | nul
 
     // Now add time
     // cleanTime format: 12:30 or 12:30 PM or 12:30:45
-    const timeMatch = cleanTime.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s?([AP]M))?/i);
+    const timeMatch = cleanTime.match(
+      /(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s?([AP]M))?/i,
+    );
     if (timeMatch) {
       const [, h, m, s, ampStr] = timeMatch;
       let hours = parseInt(h, 10);

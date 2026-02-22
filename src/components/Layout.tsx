@@ -4,12 +4,12 @@ import { History, MessageSquare, Moon, Sun, Users } from 'lucide-react';
 import Github from '../assets/github.svg';
 import Twitter from '../assets/x.svg';
 import { ReactSVG } from 'react-svg';
-import { useAppStore } from '../store/useAppStore.ts';
+import { useAppSettings } from '../hooks/useStore.ts';
 import SEO from './SEO';
 
 const Layout: FC = () => {
   const iconClass = 'w-5 h-5 text-text-muted';
-  const { isDarkMode, toggleDarkMode } = useAppStore();
+  const { isDarkMode, toggleDarkMode } = useAppSettings();
 
   useEffect(() => {
     if (isDarkMode) {

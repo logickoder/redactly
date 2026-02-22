@@ -1,6 +1,7 @@
 import { type FC, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RefreshCw, Settings } from 'lucide-react';
+import { useVirtualizedContent } from '../../hooks/useVirtualizedContent.tsx';
 
 interface RedactInputProps {
   content: string;
@@ -12,6 +13,7 @@ interface RedactInputProps {
   setDateFormat: (format: string) => void;
   aggressiveRedaction: boolean;
   setAggressiveRedaction: (aggressive: boolean) => void;
+  isParsing: boolean;
 }
 
 const RedactInput: FC<RedactInputProps> = ({
@@ -24,8 +26,12 @@ const RedactInput: FC<RedactInputProps> = ({
   setDateFormat,
   aggressiveRedaction,
   setAggressiveRedaction,
+  isParsing,
 }) => {
   const [showSettings, setShowSettings] = useState(false);
+
+  const { ref, virtualizer, virtualItems, lines, totalSize } =
+    useVirtualizedContent(content);
 
   return (
     <motion.div
@@ -107,23 +113,63 @@ const RedactInput: FC<RedactInputProps> = ({
         )}
       </AnimatePresence>
 
-      <textarea
-        id="chat-content"
-        disabled={step !== 0}
-        className="bg-background text-text focus:ring-primary h-64 w-full resize-none rounded-xl border border-gray-200 p-4 font-mono text-sm transition-all focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700"
-        placeholder="Paste your WhatsApp chat export here..."
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-      />
+      {step === 0 ? (
+        // Editable textarea when in step 0
+        <textarea
+          id="chat-content"
+          className="bg-background text-text focus:ring-primary h-64 w-full resize-none rounded-xl border border-gray-200 p-4 font-mono text-sm transition-all focus:ring-2 focus:outline-none dark:border-gray-700"
+          placeholder="Paste your WhatsApp chat export here..."
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+        />
+      ) : (
+        // Virtualized read-only view when parsed
+        <div
+          ref={ref}
+          className="bg-background text-text h-64 w-full overflow-auto rounded-xl border border-gray-200 p-4 font-mono text-sm dark:border-gray-700"
+        >
+          <div
+            style={{
+              height: `${totalSize}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {virtualItems.map((virtualRow) => (
+              <div
+                key={virtualRow.index}
+                data-index={virtualRow.index}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  transform: `translateY(${virtualRow.start}px)`,
+                  padding: '1px 0',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {lines[virtualRow.index]}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {step === 0 && (
         <div className="mt-4 flex justify-end">
           <button
             onClick={() => handleParse(content)}
-            disabled={!content.trim()}
+            disabled={!content.trim() || isParsing}
             className="bg-primary flex items-center rounded-lg px-6 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <RefreshCw size={18} className="mr-2" />
-            Parse Chat
+            <RefreshCw
+              size={18}
+              className={`mr-2 ${isParsing ? 'animate-spin' : ''}`}
+            />
+            {isParsing ? 'Parsing...' : 'Parse Chat'}
           </button>
         </div>
       )}

@@ -1,10 +1,10 @@
 import { type FC, useCallback, useMemo, useState } from 'react';
-import { useAppStore } from '../store/useAppStore';
+import { useAppSettings } from '../hooks/useStore';
 import { Edit2, Save, Search, Trash2, Users, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Mappings: FC = () => {
-  const { nameMap, updateNameMap, deleteNameMapping } = useAppStore();
+  const { nameMap, updateNameMap, deleteNameMapping } = useAppSettings();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [editingName, setEditingName] = useState<string | null>(null);
@@ -19,7 +19,9 @@ const Mappings: FC = () => {
     }
 
     return entries.filter(
-      ([name, alias]) => name.toLowerCase().includes(query) || alias.toLowerCase().includes(query)
+      ([name, alias]) =>
+        name.toLowerCase().includes(query) ||
+        alias.toLowerCase().includes(query),
     );
   }, [nameMap, searchTerm]);
 
@@ -45,20 +47,20 @@ const Mappings: FC = () => {
 
   return (
     <motion.div
-      className="max-w-5xl mx-auto p-4 sm:p-8"
+      className="mx-auto max-w-5xl p-4 sm:p-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h1 className="text-3xl font-bold mb-8 text-text">Saved Name Mappings</h1>
+      <h1 className="text-text mb-8 text-3xl font-bold">Saved Name Mappings</h1>
 
-      <div className="mb-6 relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-text-muted" />
+      <div className="relative mb-6">
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+          <Search className="text-text-muted h-5 w-5" />
         </div>
         <input
           type="text"
-          className="block w-full pl-10 pr-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg leading-5 bg-background text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary sm:text-sm transition-colors"
+          className="bg-background text-text placeholder-text-muted focus:ring-primary block w-full rounded-lg border border-gray-200 py-2 pr-3 pl-10 leading-5 transition-colors focus:ring-2 focus:outline-none sm:text-sm dark:border-gray-700"
           placeholder="Search names or aliases..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -67,7 +69,7 @@ const Mappings: FC = () => {
 
       {hasMappings ? (
         <motion.div
-          className="bg-card rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden"
+          className="bg-card overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -78,19 +80,19 @@ const Mappings: FC = () => {
                 <tr>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider"
+                    className="text-text-muted px-6 py-3 text-left text-xs font-medium tracking-wider uppercase"
                   >
                     Original Name
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider"
+                    className="text-text-muted px-6 py-3 text-left text-xs font-medium tracking-wider uppercase"
                   >
                     Alias
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-right text-xs font-medium text-text-muted uppercase tracking-wider"
+                    className="text-text-muted px-6 py-3 text-right text-xs font-medium tracking-wider uppercase"
                   >
                     Actions
                   </th>
@@ -100,25 +102,25 @@ const Mappings: FC = () => {
                 {mappings.map(([name, alias]) => (
                   <tr
                     key={name}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                    className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
+                    <td className="text-text px-6 py-4 text-sm font-medium whitespace-nowrap">
                       {name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-muted">
+                    <td className="text-text-muted px-6 py-4 text-sm whitespace-nowrap">
                       {editingName === name ? (
                         <input
                           type="text"
                           value={editValue}
                           onChange={(e) => setEditValue(e.target.value)}
-                          className="w-full p-1 bg-background border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary focus:outline-none"
+                          className="bg-background focus:ring-primary w-full rounded border border-gray-300 p-1 focus:ring-2 focus:outline-none dark:border-gray-600"
                           autoFocus
                         />
                       ) : (
                         alias
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
                       {editingName === name ? (
                         <div className="flex justify-end space-x-2">
                           <button
@@ -161,21 +163,25 @@ const Mappings: FC = () => {
             </table>
           </div>
           {mappings.length === 0 && searchTerm && (
-            <div className="p-8 text-center text-text-muted">
+            <div className="text-text-muted p-8 text-center">
               No mappings found matching "{searchTerm}"
             </div>
           )}
         </motion.div>
       ) : (
         <motion.div
-          className="text-center py-20 bg-card rounded-2xl border border-gray-200 dark:border-gray-800"
+          className="bg-card rounded-2xl border border-gray-200 py-20 text-center dark:border-gray-800"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <Users size={48} className="mx-auto text-text-muted mb-4" />
-          <h3 className="text-xl font-medium text-text mb-2">No saved mappings</h3>
-          <p className="text-text-muted">Save aliases while redacting chats to see them here.</p>
+          <Users size={48} className="text-text-muted mx-auto mb-4" />
+          <h3 className="text-text mb-2 text-xl font-medium">
+            No saved mappings
+          </h3>
+          <p className="text-text-muted">
+            Save aliases while redacting chats to see them here.
+          </p>
         </motion.div>
       )}
     </motion.div>

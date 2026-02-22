@@ -11,20 +11,25 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tanstack/react-virtual": "^3.13.18",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.26",
+    "idb": "^8.0.3",
     "lucide-react": "^0.562.0",
+    "pako": "^2.1.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-helmet-async": "^2.0.5",
     "react-router-dom": "^7.11.0",
     "react-svg": "^16.3.0",
-    "zustand": "^5.0.9"
+    "zustand": "^5.0.9",
+    "zustand-indexeddb": "^0.1.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^24.10.1",
+    "@types/pako": "^2.0.4",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vite-pwa/assets-generator": "^1.0.2",
