@@ -28,14 +28,14 @@ const RedactPreview: FC<RedactPreviewProps> = ({
       className={`card-base flex h-full flex-col p-6 transition-opacity ${step < 1 ? 'opacity-50' : ''}`}
       layout
     >
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-text text-base font-semibold">Redacted Preview</h2>
         {redactedContent.length > 0 && (
           <div
-            className="text-primary flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
+            className="text-primary inline-flex items-center gap-1.5 self-start rounded-full px-2.5 py-1 text-xs font-medium sm:self-auto"
             style={{ background: 'rgba(99,102,241,0.1)' }}
           >
-            <span>{lines.length} lines</span>
+            <span>{lines.length.toLocaleString()} lines</span>
             <span className="text-primary/40">·</span>
             <span>{redactedContent.length.toLocaleString()} chars</span>
           </div>

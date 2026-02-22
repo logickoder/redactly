@@ -121,16 +121,19 @@ const RedactConfiguration: FC<RedactConfigurationProps> = ({
           {participants.map((participant) => (
             <div
               key={participant}
-              className="flex items-center gap-2 rounded-xl p-2.5 transition-colors"
+              className="flex flex-col gap-1.5 rounded-xl p-2.5 transition-colors sm:flex-row sm:items-center sm:gap-2"
               style={{ background: 'rgba(99,102,241,0.04)' }}
             >
               <div
-                className="text-text w-1/3 truncate text-sm font-medium"
+                className="text-text truncate text-sm font-medium sm:w-1/3"
                 title={participant}
               >
                 {participant}
               </div>
-              <ArrowRight size={12} className="text-text-muted shrink-0" />
+              <ArrowRight
+                size={12}
+                className="text-text-muted hidden shrink-0 sm:block"
+              />
               <div className="flex grow gap-2">
                 <input
                   type="text"
