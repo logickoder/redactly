@@ -1,19 +1,6 @@
-import {
-  type ChangeEvent,
-  type ComponentType,
-  type FC,
-  useCallback,
-  useMemo,
-} from 'react';
+import { type ChangeEvent, type ComponentType, type FC, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Download,
-  FileText,
-  type LucideProps,
-  Settings,
-  ShieldCheck,
-  Upload,
-} from 'lucide-react';
+import { Download, FileText, type LucideProps, Settings, ShieldCheck, Upload } from 'lucide-react';
 import { type Easing, motion, type Variants } from 'framer-motion';
 
 const EASE_OUT: Easing = 'easeOut';
@@ -144,7 +131,7 @@ const Home: FC = () => {
           </motion.p>
 
           <motion.div
-            className="flex flex-wrap items-center gap-3 text-sm"
+            className="flex flex-wrap items-center justify-center gap-3 text-sm"
             variants={itemVariants}
           >
             {['Zero uploads', 'Works offline', 'Open source'].map((label) => (
