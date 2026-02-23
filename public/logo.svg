@@ -1,12 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-    <!-- Main Chat Bubble: Blue 600 (#2563EB) -->
-    <!-- Centered bubble with a tail at the bottom left -->
-    <g filter="url(#shadow)">
-        <path d="M106 140C106 106.863 132.863 80 166 80H346C379.137 80 406 106.863 406 140V290C406 323.137 379.137 350 346 350H190L130 390V350C116.745 350 106 339.255 106 326V140Z"
-              fill="#2563EB"/>
-    </g>
+  <defs>
+    <linearGradient id="bubbleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="10" stdDeviation="20" flood-color="#4338CA" flood-opacity="0.40"/>
+    </filter>
+  </defs>
 
-    <!-- Redaction Bar: Emerald 500 (#10B981) -->
-    <!-- Situated horizontally across the center of the bubble, representing the 'redacted' text -->
-    <rect x="86" y="195" width="340" height="60" rx="12" ry="12" fill="#10B981" stroke="#FFFFFF" stroke-width="6"/>
+  <!-- Chat bubble with tail -->
+  <g filter="url(#shadow)">
+    <path d="
+      M100 108
+      C100 71.34 129.34 42 166 42
+      H346
+      C382.66 42 412 71.34 412 108
+      V294
+      C412 330.66 382.66 360 346 360
+      H210
+      L150 418
+      V360
+      C122.39 360 100 337.61 100 310
+      Z"
+      fill="url(#bubbleGrad)"
+    />
+  </g>
+
+  <!-- Top text line (white, semi-transparent) -->
+  <rect x="152" y="158" width="185" height="28" rx="14" fill="white" fill-opacity="0.65"/>
+
+  <!-- Middle line: classic dark redaction bar -->
+  <rect x="140" y="206" width="232" height="36" rx="10" fill="#1E1B4B"/>
+
+  <!-- Bottom text line (white, semi-transparent, shorter) -->
+  <rect x="152" y="263" width="140" height="28" rx="14" fill="white" fill-opacity="0.65"/>
 </svg>
