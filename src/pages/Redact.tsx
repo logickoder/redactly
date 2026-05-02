@@ -4,6 +4,7 @@ import { type Message } from '../features/chat';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useAppSettings } from '../hooks/useStore';
 import { useRedactWorker } from '../hooks/useRedactWorker';
+import { trackEvent } from '../features/analytics';
 import * as chatStorage from '../features/chat';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useToast } from '../context/ToastContext';
@@ -114,11 +115,14 @@ const Redact: FC = () => {
         if (last) setEndDate(last.toISOString().split('T')[0]);
         setStep(1);
         toast.show(`Parsed ${result.messages.length} messages.`, 'success');
+        trackEvent('parse/success');
       } else {
         toast.show('No messages found. Please check the format.', 'error');
+        trackEvent('parse/fail');
       }
     } catch {
       toast.show('Error parsing chat. Please check the format.', 'error');
+      trackEvent('parse/fail');
     } finally {
       setIsParsing(false);
     }
@@ -143,6 +147,7 @@ const Redact: FC = () => {
   const copyToClipboard = async () => {
     await navigator.clipboard.writeText(redactedContent);
     toast.show('Copied to clipboard!', 'success');
+    trackEvent('export/copy');
   };
 
   const downloadFile = () => {
@@ -156,6 +161,7 @@ const Redact: FC = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     toast.show('File downloaded!', 'success');
+    trackEvent('export/download');
   };
 
   const handleSaveClick = () => {
@@ -182,6 +188,7 @@ const Redact: FC = () => {
         originalContent: content,
       });
       toast.show('Chat saved!', 'success');
+      trackEvent('history/save');
       navigate('/history');
     } catch {
       toast.show('Failed to save chat', 'error');

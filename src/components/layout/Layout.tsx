@@ -6,6 +6,8 @@ import Twitter from '../../assets/x.svg';
 import { ReactSVG } from 'react-svg';
 import { useAppSettings } from '../../hooks/useStore';
 import SEO from './SEO';
+import AnalyticsTracker from './AnalyticsTracker';
+import AnalyticsBanner from '../ui/AnalyticsBanner';
 
 const Layout: FC = () => {
   const { isDarkMode, toggleDarkMode } = useAppSettings();
@@ -21,6 +23,7 @@ const Layout: FC = () => {
   return (
     <div className="flex min-h-screen flex-col font-sans">
       <SEO />
+      <AnalyticsTracker />
       <nav
         className="sticky top-0 z-50 w-full border-b backdrop-blur-xl"
         style={{
@@ -77,6 +80,8 @@ const Layout: FC = () => {
         <Outlet />
       </main>
 
+      <AnalyticsBanner />
+
       <footer
         className="border-t py-8"
         style={{
@@ -88,6 +93,7 @@ const Layout: FC = () => {
           <a
             href="https://logickoder.dev"
             target="_blank"
+            rel="noopener noreferrer"
             className="text-text-muted hover:text-primary text-sm transition-colors"
           >
             © {new Date().getFullYear()} Jeffery Orazulike. All rights reserved.

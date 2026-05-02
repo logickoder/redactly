@@ -8,6 +8,7 @@ import type { Message, ParseResult } from '../features/chat';
 import type { RedactionSettings } from '../features/redaction';
 import { parseChat } from '../features/chat';
 import { redactMessages } from '../features/redaction';
+import { trackEvent } from '../features/analytics';
 
 interface RedactWorkerApi {
   parse: (text: string, dateFormat: string) => Promise<ParseResult>;
@@ -77,6 +78,7 @@ const getWorker = (): Worker | null => {
       err,
     );
     sharedWorker = null;
+    trackEvent('worker/fallback');
     return null;
   }
 };

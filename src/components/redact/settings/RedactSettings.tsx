@@ -8,6 +8,7 @@ import type {
   NsfwTierFlags,
 } from '../../../features/nsfw';
 import type { PiiSettings } from '../../../features/pii';
+import { trackEvent } from '../../../features/analytics';
 
 interface RedactSettingsProps {
   isOpen: boolean;
@@ -28,7 +29,44 @@ const RedactSettings: FC<RedactSettingsProps> = ({ isOpen, onClose }) => {
     setNsfwStrategy,
     setNsfwExtraWords,
     setNsfwAllowList,
+    analytics,
+    setAnalyticsConsent,
   } = useAppSettings();
+
+  const handleAggressive = () => {
+    trackEvent(aggressiveRedaction ? 'feature/aggressive-off' : 'feature/aggressive-on');
+    toggleAggressiveRedaction();
+  };
+
+  const handleTogglePii = (key: keyof PiiSettings) => {
+    if (!pii[key]) {
+      if (key === 'email') trackEvent('feature/pii-email-on');
+      else if (key === 'url') trackEvent('feature/pii-url-on');
+      else if (key === 'phone') trackEvent('feature/pii-phone-on');
+    }
+    togglePii(key);
+  };
+
+  const handleToggleNsfw = () => {
+    trackEvent(nsfw.enabled ? 'feature/nsfw-off' : 'feature/nsfw-on');
+    toggleNsfw();
+  };
+
+  const handleToggleNsfwTier = (tier: NsfwTier) => {
+    if (!nsfw.tiers[tier]) {
+      if (tier === 'general') trackEvent('feature/nsfw-tier-general');
+      else if (tier === 'slurs') trackEvent('feature/nsfw-tier-slurs');
+      else if (tier === 'violence') trackEvent('feature/nsfw-tier-violence');
+    }
+    toggleNsfwTier(tier);
+  };
+
+  const handleSetNsfwStrategy = (strategy: NsfwStrategy) => {
+    if (strategy !== nsfw.strategy) {
+      trackEvent(strategy === 'mask' ? 'feature/nsfw-strategy-mask' : 'feature/nsfw-strategy-soften');
+    }
+    setNsfwStrategy(strategy);
+  };
 
   return (
     <Modal
@@ -44,20 +82,24 @@ const RedactSettings: FC<RedactSettingsProps> = ({ isOpen, onClose }) => {
         />
         <AggressiveSection
           checked={aggressiveRedaction}
-          onChange={toggleAggressiveRedaction}
+          onChange={handleAggressive}
         />
-        <PiiSection pii={pii} togglePii={togglePii} />
+        <PiiSection pii={pii} togglePii={handleTogglePii} />
         <NsfwSection
           enabled={nsfw.enabled}
           tiers={nsfw.tiers}
           strategy={nsfw.strategy}
           extraWords={nsfw.extraWords}
           allowList={nsfw.allowList}
-          onToggleEnabled={toggleNsfw}
-          onToggleTier={toggleNsfwTier}
-          onSetStrategy={setNsfwStrategy}
+          onToggleEnabled={handleToggleNsfw}
+          onToggleTier={handleToggleNsfwTier}
+          onSetStrategy={handleSetNsfwStrategy}
           onSetExtraWords={setNsfwExtraWords}
           onSetAllowList={setNsfwAllowList}
+        />
+        <AnalyticsSection
+          enabled={analytics.enabled}
+          onChange={setAnalyticsConsent}
         />
       </div>
 
@@ -238,6 +280,22 @@ const NsfwSection: FC<{
         />
       </div>
     )}
+  </section>
+);
+
+const AnalyticsSection: FC<{
+  enabled: boolean;
+  onChange: (enabled: boolean) => void;
+}> = ({ enabled, onChange }) => (
+  <section>
+    <SectionTitle title="Anonymous Usage Stats" />
+    <Checkbox
+      id="settings-analytics"
+      checked={enabled}
+      onChange={() => onChange(!enabled)}
+      label="Share anonymous usage stats"
+      hint="Page visits + feature toggles via GoatCounter (cookieless). Never your chat data, names, or anything personal. Opt-in only."
+    />
   </section>
 );
 

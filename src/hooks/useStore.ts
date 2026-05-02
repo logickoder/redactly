@@ -7,6 +7,10 @@ import {
   type NsfwStrategy,
   type NsfwTier,
 } from '../features/nsfw';
+import {
+  defaultAnalyticsSettings,
+  type AnalyticsSettings,
+} from '../features/analytics';
 
 interface AppSettingsState {
   isDarkMode: boolean;
@@ -31,6 +35,9 @@ interface AppSettingsState {
   setNsfwStrategy: (strategy: NsfwStrategy) => void;
   setNsfwExtraWords: (words: string[]) => void;
   setNsfwAllowList: (words: string[]) => void;
+
+  analytics: AnalyticsSettings;
+  setAnalyticsConsent: (enabled: boolean) => void;
 }
 
 export const useAppSettings = create<AppSettingsState>()(
@@ -84,13 +91,17 @@ export const useAppSettings = create<AppSettingsState>()(
         set((state) => ({ nsfw: { ...state.nsfw, extraWords } })),
       setNsfwAllowList: (allowList) =>
         set((state) => ({ nsfw: { ...state.nsfw, allowList } })),
+
+      analytics: defaultAnalyticsSettings,
+      setAnalyticsConsent: (enabled) =>
+        set({ analytics: { enabled, hasDecided: true } }),
     }),
     {
       name: 'redactly-settings',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
-      // Older persisted shapes may lack `pii` / `nsfw` or carry the v1 nsfw
-      // tier shape (profanity + sexual). Fill / coerce from defaults.
+      // Older persisted shapes may lack `pii` / `nsfw` / `analytics` or carry
+      // the v1 nsfw tier shape (profanity + sexual). Fill / coerce from defaults.
       migrate: (persisted) => {
         const state = persisted as Partial<AppSettingsState> | null;
         if (!state) return state;
@@ -110,6 +121,7 @@ export const useAppSettings = create<AppSettingsState>()(
             };
           }
         }
+        if (!state.analytics) state.analytics = { ...defaultAnalyticsSettings };
         return state;
       },
     },

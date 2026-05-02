@@ -27,9 +27,10 @@ Adding a new dependency requires: (a) a justification in PR description, (b) con
 ## 2. Architecture Rules
 
 ### 2.1 Privacy invariant (non-negotiable)
-- **Zero automatic network egress for chat data.** No `fetch`/`XMLHttpRequest`/`WebSocket`/analytics SDK that touches chat content, names, mappings, or history. No silent telemetry of any kind.
-- Network calls allowed only for: (i) loading the app shell + fonts (Google Fonts is the only external host today, see [src/index.css:1](src/index.css#L1)), (ii) PWA service worker assets, (iii) **user-initiated, explicit form submissions** to a documented endpoint — currently only the Feedback form ([src/pages/Feedback.tsx](src/pages/Feedback.tsx)) which posts a free-form message and optional email to Formspree. The user chooses what to type and clicks Send.
+- **Zero automatic network egress for chat data.** No `fetch`/`XMLHttpRequest`/`WebSocket` that touches chat content, names, mappings, or history. No silent telemetry of any kind.
+- Network calls allowed only for: (i) loading the app shell + fonts (Google Fonts is the only external host today, see [src/index.css:1](src/index.css#L1)), (ii) PWA service worker assets, (iii) **user-initiated, explicit form submissions** to a documented endpoint — currently only the Feedback form ([src/pages/Feedback.tsx](src/pages/Feedback.tsx)) which posts a free-form message and optional email to Formspree, (iv) **opt-in cookieless analytics** to GoatCounter ([src/features/analytics/](src/features/analytics/)). Default OFF. Banner asks once. Honors `navigator.doNotTrack`. Tracks only: page route, feature toggle events, install / parse outcomes. Never chat data.
 - The Feedback endpoint MUST never auto-attach chat data, names, or any state from `useAppSettings` / IndexedDB. Only the literal form fields.
+- The analytics endpoint MUST only receive hard-coded path strings or the literal `AnalyticsEvent` union — no message text, no participant names, no file size, no message count, no search queries. New event names must be added to [src/features/analytics/types.ts](src/features/analytics/types.ts) and reviewed in PR.
 - Any new network call MUST be reviewed in PR.
 
 ### 2.2 Data flow

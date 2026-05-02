@@ -69,7 +69,41 @@ npm run lint
 
 ## Privacy
 
-All processing is 100% client-side. No data is ever sent to a server.
+Chat parsing, redaction, and storage are 100% client-side. No chat data leaves your device.
+
+**The only outbound traffic from this app:**
+
+- Loading static assets (HTML, JS, CSS, fonts) on first visit.
+- Submitting the optional Feedback form (you choose what to type and click Send).
+- **Anonymous, cookieless usage stats** via [GoatCounter](https://goatcounter.com) — opt-in only, off by default, honors `Do Not Track`. Tracks: page visits + which features you toggled. Never tracks: chat content, names, aliases, file sizes, message counts, search queries. Disable any time from Settings → Anonymous Usage Stats.
+
+## Configuration
+
+### Setting up GoatCounter
+
+1. Sign up at [goatcounter.com](https://www.goatcounter.com/) (free for non-commercial use).
+2. **Recommended: spin up a dedicated site for Redactly** so events don't mix with other projects under the same account. From your main dashboard go to **Settings → Sites → Add site** and set the code to `redactly`. Your endpoint becomes `https://redactly.goatcounter.com/count` and the dashboard at `https://redactly.goatcounter.com`.
+3. Free tier allows up to 6 additional sites per account. Each has its own code, dashboard, and counters.
+
+### Local development
+
+Copy `.env.example` to `.env.local`:
+
+```bash
+VITE_GOATCOUNTER_CODE=redactly   # subdomain part of redactly.goatcounter.com
+```
+
+Leave empty to disable the analytics feature entirely (the script will never load, regardless of user consent).
+
+### CI / GitHub Pages deploy
+
+The deploy workflow ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)) writes `.env.production.local` from a repository secret before running `pnpm build`:
+
+| Secret name | Purpose |
+|---|---|
+| `GOATCOUNTER_CODE` | Your GoatCounter site code (e.g. `redactly`). Missing/empty → analytics disabled in the deployed build. |
+
+Add it under **Settings → Secrets and variables → Actions → New repository secret**.
 
 ## License
 

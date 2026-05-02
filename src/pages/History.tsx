@@ -2,6 +2,7 @@ import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import * as chatStorage from '../features/chat';
 import { type ChatPreview } from '../features/chat';
+import { trackEvent } from '../features/analytics';
 import { ArrowRight, Clock, FileText, Trash2 } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 import PageHeader from '../components/ui/PageHeader';
@@ -32,6 +33,7 @@ const History: FC = () => {
     async (preview: ChatPreview) => {
       const fullChat = await chatStorage.loadFullChat(preview.id);
       if (fullChat) {
+        trackEvent('history/load');
         navigate('/redact', { state: { savedChat: fullChat } });
       }
     },
@@ -42,6 +44,7 @@ const History: FC = () => {
     try {
       await chatStorage.deleteChat(id);
       setChats((prev) => prev.filter((c) => c.id !== id));
+      trackEvent('history/delete');
     } catch {
       console.error('Failed to delete chat');
     }

@@ -44,6 +44,7 @@ redacting names and filtering conversations by date.
 | **FS-15** | Mask non-name PII (emails, URLs, phone numbers) per-category toggle.                                    | **High** |
 | **FS-16** | NSFW content filter (general profanity + sexual / slurs / graphic violence) so downstream LLMs accept the chat. | **High** |
 | **FS-17** | Run parsing + redaction off the main thread so the UI stays responsive on large chats (>1MB).           | Medium   |
+| **FS-18** | Optional anonymous usage analytics (cookieless, opt-in, page + feature events only — no chat data).      | Low      |
 
 ## **3. Technical Requirements**
 
