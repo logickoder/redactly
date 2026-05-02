@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 import './index.css';
 import App from './App.tsx';
-import { initDB } from './utils/chatStorage';
+import { initDB } from './features/chat';
 
 // Initialize IndexedDB before rendering the app
 initDB().catch((error) => {

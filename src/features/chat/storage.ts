@@ -4,36 +4,14 @@ import {
   compressText,
   decompressText,
   uint8ArrayToBase64,
-} from './compression';
-
-export interface SavedChat {
-  id: string;
-  title: string;
-  date: string;
-  content: string;
-  originalContent?: string;
-}
-
-export interface ChatPreview {
-  id: string;
-  title: string;
-  date: string;
-  preview: string;
-}
+} from '../compression';
+import type { ChatPreview, SavedChat, StoredChat } from './types';
 
 const DB_NAME = 'redactly-db';
-const DB_VERSION = 3; // Increment version for preview field
+const DB_VERSION = 3;
 const CHATS_STORE = 'chats';
-
-interface StoredChat {
-  id: string;
-  title: string;
-  date: string;
-  preview: string; // First 10 lines, uncompressed for fast loading
-  content: string; // Compressed base64
-  originalContent?: string; // Compressed base64
-  compressed: boolean;
-}
+const COMPRESSION_THRESHOLD = 10 * 1024;
+const PREVIEW_LINE_COUNT = 10;
 
 let dbPromise: Promise<IDBPDatabase> | null = null;
 
@@ -45,7 +23,6 @@ const getDB = async (): Promise<IDBPDatabase> => {
           `Upgrading database from version ${oldVersion} to ${DB_VERSION}`,
         );
 
-        // Create chats store if it doesn't exist
         if (!db.objectStoreNames.contains(CHATS_STORE)) {
           console.log('Creating chats object store...');
           const store = db.createObjectStore(CHATS_STORE, { keyPath: 'id' });
@@ -58,9 +35,6 @@ const getDB = async (): Promise<IDBPDatabase> => {
   return dbPromise;
 };
 
-/**
- * Initialize the database (call this on app startup)
- */
 export const initDB = async (): Promise<void> => {
   try {
     await getDB();
@@ -71,23 +45,17 @@ export const initDB = async (): Promise<void> => {
   }
 };
 
-/**
- * Clear and reinitialize the database (useful for debugging)
- */
 export const resetDB = async (): Promise<void> => {
   try {
-    // Close existing connection
     if (dbPromise) {
       const db = await dbPromise;
       db.close();
       dbPromise = null;
     }
 
-    // Delete the database
     await deleteDB(DB_NAME);
     console.log('Database deleted');
 
-    // Reinitialize
     await initDB();
     console.log('Database reinitialized');
   } catch (error) {
@@ -96,37 +64,28 @@ export const resetDB = async (): Promise<void> => {
   }
 };
 
-/**
- * Extract preview (first 10 lines) from content
- */
 const extractPreview = (content: string): string => {
   const lines = content.split('\n');
-  const previewLines = lines.slice(0, 10);
+  const previewLines = lines.slice(0, PREVIEW_LINE_COUNT);
   return previewLines.join('\n');
 };
 
-/**
- * Save a chat to IndexedDB (each chat as a separate record)
- */
 export const saveChat = async (chat: SavedChat): Promise<void> => {
   const db = await getDB();
 
-  // Extract preview (first 10 lines, uncompressed)
   const preview = extractPreview(chat.content);
-
-  // Compress content if larger than 10KB
-  const shouldCompress = chat.content.length > 10 * 1024;
+  const shouldCompress = chat.content.length > COMPRESSION_THRESHOLD;
 
   const storedChat: StoredChat = {
     id: chat.id,
     title: chat.title,
     date: chat.date,
-    preview, // Store uncompressed for fast loading
+    preview,
     content: shouldCompress
       ? uint8ArrayToBase64(compressText(chat.content))
       : chat.content,
     originalContent:
-      chat.originalContent && chat.originalContent.length > 10 * 1024
+      chat.originalContent && chat.originalContent.length > COMPRESSION_THRESHOLD
         ? uint8ArrayToBase64(compressText(chat.originalContent))
         : chat.originalContent,
     compressed: shouldCompress,
@@ -135,16 +94,12 @@ export const saveChat = async (chat: SavedChat): Promise<void> => {
   await db.put(CHATS_STORE, storedChat);
 };
 
-/**
- * Get a single chat by ID
- */
 export const getChat = async (id: string): Promise<SavedChat | null> => {
   const db = await getDB();
   const storedChat = await db.get(CHATS_STORE, id);
 
   if (!storedChat) return null;
 
-  // Decompress if needed
   return {
     id: storedChat.id,
     title: storedChat.title,
@@ -160,51 +115,48 @@ export const getChat = async (id: string): Promise<SavedChat | null> => {
   };
 };
 
-/**
- * Get all chat previews (fast - no decompression needed)
- * Returns only: id, title, date, preview
- */
-export const getAllChatPreviews = async (): Promise<
-  Array<{
-    id: string;
-    title: string;
-    date: string;
-    preview: string;
-  }>
-> => {
+export const getAllChatPreviews = async (): Promise<ChatPreview[]> => {
   const db = await getDB();
   const storedChats = await db.getAllFromIndex(CHATS_STORE, 'date');
 
-  // Map to preview objects (no decompression!)
-  const previews = storedChats.map((storedChat: StoredChat) => ({
-    id: storedChat.id,
-    title: storedChat.title,
-    date: storedChat.date,
-    preview:
-      storedChat.preview ||
-      extractPreview(
+  const previews: ChatPreview[] = [];
+  const backfillTargets: StoredChat[] = [];
+
+  for (const storedChat of storedChats as StoredChat[]) {
+    let preview = storedChat.preview;
+    if (!preview) {
+      preview = extractPreview(
         storedChat.compressed
           ? decompressText(base64ToUint8Array(storedChat.content))
           : storedChat.content,
-      ), // Fallback for old chats without preview
-  }));
+      );
+      backfillTargets.push({ ...storedChat, preview });
+    }
+    previews.push({
+      id: storedChat.id,
+      title: storedChat.title,
+      date: storedChat.date,
+      preview,
+    });
+  }
 
-  // Sort by date descending (newest first)
+  if (backfillTargets.length > 0) {
+    const tx = db.transaction(CHATS_STORE, 'readwrite');
+    await Promise.all([
+      ...backfillTargets.map((c) => tx.store.put(c)),
+      tx.done,
+    ]);
+  }
+
   return previews.sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
 };
 
-/**
- * Load full chat content by ID (on-demand)
- */
 export const loadFullChat = async (id: string): Promise<SavedChat | null> => {
   return await getChat(id);
 };
 
-/**
- * Delete a chat by ID
- */
 export const deleteChat = async (id: string): Promise<void> => {
   const db = await getDB();
   await db.delete(CHATS_STORE, id);

@@ -34,7 +34,7 @@ Adding a new dependency requires: (a) a justification in PR description, (b) con
 ### 2.2 Data flow
 - Chat parsing, redaction, and storage happen entirely client-side.
 - Settings (theme, date format, name mappings, redaction toggles) → Zustand `persist` → `localStorage` ([src/hooks/useStore.ts](src/hooks/useStore.ts)).
-- Saved chats → IndexedDB store `chats` ([src/utils/chatStorage.ts](src/utils/chatStorage.ts)). Bump `DB_VERSION` for schema changes; provide an `upgrade` handler.
+- Saved chats → IndexedDB store `chats` ([src/features/chat/storage.ts](src/features/chat/storage.ts)). Bump `DB_VERSION` for schema changes; provide an `upgrade` handler.
 - Compression: gzip via `pako`, store as base64 string. Threshold: compress if `length > 10 * 1024`. Always store an uncompressed `preview` (first 10 lines) for fast list rendering.
 
 ### 2.3 Folder layout
@@ -44,37 +44,57 @@ src/                       Application code only. Ships in the production bundle
   main.tsx                 Entry. Mounts <App />.
   index.css                Tailwind import + theme tokens + utility classes.
   pages/                   Route components only (Home, Redact, History, Mappings, Feedback).
-  components/              Shared components.
-  components/<feature>/    Feature-scoped components (e.g. components/redact/).
-  hooks/                   Reusable hooks + Zustand stores.
-  utils/                   Pure-ish modules (parser, storage, compression). No JSX.
+  components/              Shared UI components (used by ≥2 pages).
+  components/<feature>/    Feature-scoped UI components (e.g. components/redact/).
+  features/<name>/         Feature-scoped logic modules. Pure-ish; no React UI.
+                           Each is a folder with an index.ts barrel export.
+                           Current features: chat, redaction, compression.
+  lib/                     Cross-cutting low-level helpers (regex, math, type guards).
+                           Flat files, NOT folders. No barrel.
+  hooks/                   Reusable hooks + Zustand stores. File name MUST start with `use`.
   context/                 React Context providers (e.g. ToastContext).
-  assets/                  Static SVGs.
   workers/                 Web Worker entry files.
+  assets/                  Static SVGs and other media.
 
 tests/                     Test code + fixtures. NEVER ships in production bundle.
   setup.ts                 Vitest setup (jest-dom matchers, etc.).
   fixtures/                Sample input data (.txt, .json) used by tests.
-  utils/                   Tests for src/utils/*. Mirrors the src/ tree.
+  features/                Tests for src/features/*. Mirrors the src/ tree.
   components/              Tests for src/components/*.
   hooks/                   Tests for src/hooks/*.
+  lib/                     Tests for src/lib/*.
   pages/                   Tests for src/pages/*.
 ```
+
+**Feature folders (`src/features/<name>/`):**
+- Each feature is a folder, not a flat file. Even single-file features start as a folder so growth doesn't force a churn-heavy rename later.
+- Required files inside a feature folder:
+  - `types.ts` — interfaces and type aliases for the feature
+  - one or more implementation files (e.g. `core.ts`, `parser.ts`, `storage.ts`)
+  - `index.ts` — **barrel export.** Re-exports the public surface only. Internal helpers must NOT be re-exported.
+- Consumers ALWAYS import from `'../features/<name>'` (the barrel), never from a deep path like `'../features/<name>/core'`. The barrel is the contract; deep imports break the boundary.
+- Inside a feature, files import from sibling files via relative paths (e.g. `./types`, `./core`). Do NOT import a feature's own barrel from inside that feature — circular.
+- A feature MAY import from another feature only via that other feature's barrel. Cross-feature deep imports are forbidden.
+- A feature MUST NOT import from `pages/`, `components/`, or `hooks/`. Direction of dependency is one-way: UI → features → lib. Features may import from `lib/`.
+- A feature MUST NOT import from `react`, `react-dom`, or any rendering library. Features are headless logic.
+
+**lib/:**
+- Flat single-purpose files only (e.g. `regex.ts`). No subfolders, no barrel.
+- Pure utilities with no domain knowledge. If logic carries domain meaning, it belongs in `features/`, not `lib/`.
+
+**Component folders (`src/components/` and `src/components/<feature>/`):**
+- A component used in only one page lives under `components/<page-name>/`.
+- A component used in two or more pages lives in `components/`.
+- One default export per component file. Helper components in the same file are fine if private (see `NavIcon` in [src/components/Layout.tsx:113](src/components/Layout.tsx#L113), `SectionHeader` in [src/components/redact/RedactConfiguration.tsx:18](src/components/redact/RedactConfiguration.tsx#L18)).
+- Components do NOT have a barrel — import each component directly by its file path.
 
 **Strict separation of concerns:**
 - `src/` is application code only. **No `*.test.ts(x)` files in `src/`.** No fixtures, no test scaffolding.
 - `tests/` is the only home for test code, fixtures, mocks, and test setup.
-- Test files mirror the path of the file under test, e.g. `src/utils/redaction.ts` → `tests/utils/redaction.test.ts`.
-- Test imports reach into `src/` via relative paths (e.g. `import { foo } from '../../src/utils/foo'`).
+- Test files mirror the path of the file under test, e.g. `src/features/redaction/core.ts` → `tests/features/redaction.test.ts` (test the barrel surface).
+- Test imports reach into `src/` via relative paths (e.g. `import { foo } from '../../src/features/foo'`).
 - `tsconfig.app.json` includes `src` only — tests never reach the build. `tsconfig.test.json` covers the `tests/` tree.
 - Vitest is configured with `include: ['tests/**/*.{test,spec}.{ts,tsx}']` in [vite.config.ts](vite.config.ts). Do not change.
-
-Rules:
-- A component used in only one page lives under `components/<page-name>/`.
-- A component used in two or more pages lives in `components/`.
-- Pure logic (parsing, storage, math) goes in `utils/`. Never import from `react` in `utils/`.
-- Hooks live in `hooks/`. File name MUST start with `use`.
-- One default export per component file. Helper components in the same file are fine if private (see `NavIcon` in [src/components/Layout.tsx:113](src/components/Layout.tsx#L113), `SectionHeader` in [src/components/redact/RedactConfiguration.tsx:18](src/components/redact/RedactConfiguration.tsx#L18)).
 
 ---
 
@@ -163,7 +183,8 @@ Rules:
 - ESLint: `eslint.config.js` with `react-hooks` + `react-refresh`. Zero warnings.
 - Single quotes for strings, semicolons required, trailing commas.
 - File naming: `PascalCase.tsx` for components, `camelCase.ts` for utils/hooks.
-- Imports: external first, internal second, type imports last. No barrel files.
+- Imports: external first, internal second, type imports last.
+- Barrel files (`index.ts` re-exports) are allowed **only at feature-folder roots** (`src/features/<name>/index.ts`) per §2.3. Do not create barrels for `src/components/`, `src/hooks/`, `src/lib/`, or any subfolder of these.
 - No comments explaining what code does. Comment only when WHY is non-obvious.
 
 ---
@@ -205,10 +226,10 @@ When extracting:
 ### 9a.4 Known extraction debts
 
 These exist as duplicates today and MUST be consolidated when next touched:
-- Modal shell — backdrop, card, top accent strip, animation. Currently inlined in `AddParticipantModal`. Extract to `src/components/Modal.tsx` when adding any new modal.
+- ~~Modal shell — backdrop, card, top accent strip, animation. Currently inlined in `AddParticipantModal`. Extract to `src/components/Modal.tsx` when adding any new modal.~~ ✅ Extracted to [src/components/Modal.tsx](src/components/Modal.tsx) with [src/hooks/useFocusTrap.ts](src/hooks/useFocusTrap.ts). Both `SaveChatModal` and `AddParticipantModal` consume it.
 - Section header (eyebrow + icon chip) — `SectionHeader` is currently private to [src/components/redact/RedactConfiguration.tsx:18](src/components/redact/RedactConfiguration.tsx#L18). Promote to `src/components/SectionHeader.tsx` on next reuse.
 - Virtualized monospace panel — repeated structurally in `RedactInput` step ≥1 view and `RedactPreview`. Extract to `src/components/VirtualizedTextPanel.tsx` if a third use appears.
-- Regex special-character escape — currently inlined twice in [src/pages/Redact.tsx:64,71](src/pages/Redact.tsx#L64). Extract to `src/utils/regex.ts` (`escapeRegex(str: string): string`) on next touch.
+- ~~Regex special-character escape — currently inlined twice in `src/pages/Redact.tsx`. Extract to `escapeRegex(str: string): string`.~~ ✅ Extracted to [src/lib/regex.ts](src/lib/regex.ts).
 - Tinted-background recipes (`rgba(99,102,241,0.04|0.05|0.08|0.10|0.12)`) — promote the most common to CSS custom properties (`--tint-primary-soft`, `--tint-primary`, `--tint-primary-strong`) and update §2 of [DESIGN.md](DESIGN.md).
 
 ### 9a.5 What is NOT duplication

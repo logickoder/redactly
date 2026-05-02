@@ -66,10 +66,14 @@ const RedactConfiguration: FC<RedactConfigurationProps> = ({
         <SectionHeader icon={<Calendar size={12} />} label="Date Range" />
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-text-muted mb-1.5 block text-xs font-medium">
+            <label
+              htmlFor="redact-start-date"
+              className="text-text-muted mb-1.5 block text-xs font-medium"
+            >
               Start Date
             </label>
             <input
+              id="redact-start-date"
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
@@ -77,10 +81,14 @@ const RedactConfiguration: FC<RedactConfigurationProps> = ({
             />
           </div>
           <div>
-            <label className="text-text-muted mb-1.5 block text-xs font-medium">
+            <label
+              htmlFor="redact-end-date"
+              className="text-text-muted mb-1.5 block text-xs font-medium"
+            >
               End Date
             </label>
             <input
+              id="redact-end-date"
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}

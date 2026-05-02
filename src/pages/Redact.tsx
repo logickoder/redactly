@@ -1,10 +1,10 @@
 import { type FC, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { type Message, parseChat } from '../utils/chatParser';
-import { redactMessages } from '../utils/redaction';
+import { type Message, parseChat } from '../features/chat';
+import { redactMessages } from '../features/redaction';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useAppSettings } from '../hooks/useStore';
-import * as chatStorage from '../utils/chatStorage';
+import * as chatStorage from '../features/chat';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useToast } from '../context/ToastContext';
 import RedactInput from '../components/redact/RedactInput';
@@ -169,16 +169,21 @@ const Redact: FC = () => {
     };
   }, [aliases]);
 
-  if (location.state?.fileContent && !hasInitialized.current) {
-    setContent(location.state.fileContent);
-    void handleParse(location.state.fileContent);
-    hasInitialized.current = true;
-  } else if (location.state?.savedChat && !hasInitialized.current) {
-    const saved = location.state.savedChat;
-    setContent(saved.originalContent || '');
-    if (saved.originalContent) void handleParse(saved.originalContent);
-    hasInitialized.current = true;
-  }
+  useEffect(() => {
+    if (hasInitialized.current) return;
+    if (location.state?.fileContent) {
+      setContent(location.state.fileContent);
+      void handleParse(location.state.fileContent);
+      hasInitialized.current = true;
+    } else if (location.state?.savedChat) {
+      const saved = location.state.savedChat;
+      setContent(saved.originalContent || '');
+      if (saved.originalContent) void handleParse(saved.originalContent);
+      hasInitialized.current = true;
+    }
+    // handleParse intentionally omitted — bootstrapping should run once per route entry
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   return (
     <motion.div

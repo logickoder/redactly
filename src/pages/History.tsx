@@ -1,7 +1,7 @@
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import * as chatStorage from '../utils/chatStorage';
-import { type ChatPreview } from '../utils/chatStorage';
+import * as chatStorage from '../features/chat';
+import { type ChatPreview } from '../features/chat';
 import { ArrowRight, Clock, FileText, Trash2 } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 import PageHeader from '../components/PageHeader';

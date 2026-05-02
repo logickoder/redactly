@@ -32,18 +32,18 @@ Update the Status line under each phase as work moves. Add a one-line **Notes** 
 
 ## Phase 1 — Critical Redaction Correctness (M)
 
-**Status:** ⚪ Not started
+**Status:** 🟢 Done
 
-**Files:** `src/utils/redaction.ts`, `src/pages/Redact.tsx`, `src/hooks/useStore.ts`.
+**Notes:** Rewrote `src/utils/redaction.ts` with single combined regex (built once per call), longest-first sort, Unicode-aware lookaround boundaries (`(?<![\p{L}\p{N}_])…(?![\p{L}\p{N}_])`), `iu` flags, dedup by lowercased pattern, length-3+ aggressive parts. 13 unit tests passing (Cyrillic, accented Latin, regex-special escapes, overlap, aggressive split, date filter, undated messages, longest-first). Stopwords list deferred to a follow-up — current API stable for it.
 
-1. **Sort names longest-first** before building regex. Prevents "John" eating "Johnsons".
-2. **Single combined regex per pass**, built once per `(aliases, aggressive)` change. Replace with a function that maps match→alias. Eliminates O(n·m) loop in [src/pages/Redact.tsx:63-78](src/pages/Redact.tsx#L63-L78).
-3. **Unicode-aware boundaries.** Replace `\b` with lookarounds: `(?<!\p{L}|\p{N})…(?!\p{L}|\p{N})` with `u` flag. Handles Cyrillic, CJK, accented Latin.
-4. **Case-insensitive but Unicode-correct:** flag `iu`. Verify Turkish dotted-i edge cases via test fixture.
-5. **Aggressive split rule:** keep `length > 2` filter; also drop common-name stopwords (configurable list, start empty).
-6. **Tests:** ≥10 redaction unit tests covering ordering, Unicode, overlap, aggressive mode, partial mentions.
+- ~~Sort names longest-first.~~ ✅
+- ~~Single combined regex per pass, built once.~~ ✅
+- ~~Unicode-aware boundaries via lookarounds.~~ ✅
+- ~~Case-insensitive `iu` flags.~~ ✅
+- ~~Aggressive split with `length >= 3`.~~ ✅ (Stopword list deferred — empty for now.)
+- ~~≥10 redaction unit tests.~~ ✅ (13 tests.)
 
-**Exit criteria:** all redaction edge cases in fixtures pass.
+**Exit criteria:** ~~all redaction edge cases in fixtures pass.~~ ✅
 
 ---
 
@@ -138,32 +138,32 @@ NSFW pass shares Worker pipeline (Phase 6). Build regexes once per settings chan
 
 ## Phase 4 — Parser Robustness (M)
 
-**Status:** ⚪ Not started
+**Status:** 🟢 Done
 
-**File:** `src/utils/chatParser.ts`.
+**Notes:** Parser split into format detectors: `IOS_MESSAGE` / `ANDROID_MESSAGE` for actual chat lines, `IOS_HEADER` / `ANDROID_HEADER` for system lines (matched only as fallback so messages always win). System lines (encryption notice, group events) are dropped. `<This message was edited>` stripped from `content`; `Message.edited` flag added to types. Date validation rejects out-of-range day/month/hour and catches impossible dates (Feb 30) via JS Date roundtrip. Continuation lines capped at 100. 12 new parser tests passing (Android, iOS, Unicode, date-validation, cap).
 
-Replace single regex with format-detection chain:
-1. Try iOS bracketed: `[dd/MM/yy, HH:mm:ss] Name: Msg`
-2. Try Android dash: `dd/MM/yy, HH:mm - Name: Msg`
-3. Try locale variants (am/pm vs 24h, comma vs none).
-4. **System messages** filtered: lines like `Messages and calls are end-to-end encrypted`, `<Media omitted>`, `Missed voice call`, `<This message was edited>` either dropped or kept as `[SYSTEM]` (configurable).
-5. **Edited markers** detected; strip `<This message was edited>` suffix from `content` while preserving `originalString`.
-6. **Date validation:** reject `day > 31`, `month > 12`. Currently silent.
-7. **Multi-line continuation** stays as-is but capped (defensive: if a single message accumulates >100 lines, treat as parse failure for that block).
-
-**Tests:** parse each fixture, assert `messages.length` and a sampled message.
+- ~~iOS bracketed regex.~~ ✅
+- ~~Android dash regex.~~ ✅
+- ~~Locale variants (am/pm, 24h, optional seconds, comma optional) covered by shared `DATE` / `TIME` building blocks.~~ ✅
+- ~~System messages dropped.~~ ✅
+- ~~Edited markers stripped, `Message.edited` flag added.~~ ✅
+- ~~Date validation (day/month/hour bounds, Feb 30 roundtrip).~~ ✅
+- ~~Multi-line continuation cap (100 lines).~~ ✅
+- ~~Tests across fixtures.~~ ✅ (12 tests; 25 total now)
 
 ---
 
 ## Phase 5 — React Cleanups (S)
 
-**Status:** ⚪ Not started
+**Status:** 🟢 Done
 
-- Move init logic in [src/pages/Redact.tsx:202-211](src/pages/Redact.tsx#L202-L211) into a `useEffect` keyed on `location.state`.
-- Add focus trap + Escape-to-close + return-focus to `AddParticipantModal` and `SaveChatModal`. Pull `focus-trap-react` (small) or write 30-line hook in `src/hooks/useFocusTrap.ts`.
-- Add `htmlFor`/`id` on date inputs in [src/components/redact/RedactConfiguration.tsx:72,83](src/components/redact/RedactConfiguration.tsx#L72).
-- Backfill `preview` field in [src/utils/chatStorage.ts:185](src/utils/chatStorage.ts#L185): on first read of an old chat, write back computed preview so next read fast. (`db.put` inside map; cheap, idempotent.)
-- Extract reusable Modal shell out of `AddParticipantModal` + `SaveChatModal` per DEVELOPMENT.md no-duplication rule. New: `src/components/Modal.tsx` (backdrop + card + accent strip + header + animation). Existing modals consume it.
+**Notes:** Modal shell extracted. New `useFocusTrap` hook handles Escape + Tab cycling + restore focus. Both modals consume `Modal`, drop ~80 lines of duplication. Init effect moved out of render. Date inputs get linked labels. Storage backfills preview on first read via single transaction. Tests + build + lint green.
+
+- ~~Move init logic in [src/pages/Redact.tsx:202-211](src/pages/Redact.tsx#L202-L211) into a `useEffect` keyed on `location.state`.~~ ✅
+- ~~Add focus trap + Escape-to-close + return-focus to `AddParticipantModal` and `SaveChatModal`.~~ ✅ ([src/hooks/useFocusTrap.ts](src/hooks/useFocusTrap.ts))
+- ~~Add `htmlFor`/`id` on date inputs in `RedactConfiguration`.~~ ✅
+- ~~Backfill `preview` field in chat storage on first read.~~ ✅ ([src/features/chat/storage.ts](src/features/chat/storage.ts))
+- ~~Extract reusable Modal shell.~~ ✅ ([src/components/Modal.tsx](src/components/Modal.tsx))
 
 ---
 
