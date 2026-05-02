@@ -1,6 +1,7 @@
 import { type FC, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { type Message, parseChat } from '../utils/chatParser';
+import { redactMessages } from '../utils/redaction';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useAppSettings } from '../hooks/useStore';
 import * as chatStorage from '../utils/chatStorage';
@@ -45,47 +46,16 @@ const Redact: FC = () => {
   const aliasDebounceTimer = useRef<number | null>(null);
   const hasInitialized = useRef(false);
 
-  const redactedContent = useMemo(() => {
-    if (parsedMessages.length === 0) return '';
-
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
-    if (end) end.setHours(23, 59, 59, 999);
-
-    return parsedMessages
-      .filter((msg) => {
-        if (!msg.date) return true;
-        if (start && msg.date < start) return false;
-        return !(end && msg.date > end);
-      })
-      .map((msg) => {
-        let line = msg.originalString;
-        Object.entries(debouncedAliases).forEach(([name, aliasName]) => {
-          const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          line = line.replace(new RegExp(escaped, 'gi'), aliasName);
-          if (aggressiveRedaction) {
-            name
-              .split(/\s+/)
-              .filter((p) => p.length > 2)
-              .forEach((part) => {
-                const escapedPart = part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                line = line.replace(
-                  new RegExp(`\\b${escapedPart}\\b`, 'gi'),
-                  aliasName,
-                );
-              });
-          }
-        });
-        return line;
-      })
-      .join('\n');
-  }, [
-    parsedMessages,
-    debouncedAliases,
-    startDate,
-    endDate,
-    aggressiveRedaction,
-  ]);
+  const redactedContent = useMemo(
+    () =>
+      redactMessages(parsedMessages, {
+        aliases: debouncedAliases,
+        aggressiveRedaction,
+        startDate,
+        endDate,
+      }),
+    [parsedMessages, debouncedAliases, startDate, endDate, aggressiveRedaction],
+  );
 
   const steps = useMemo(() => ['Input', 'Configure', 'Export'], []);
 

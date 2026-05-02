@@ -1,0 +1,7 @@
+[15/03/2024, 09:14:01] Alice: Good morning Bob!
+[15/03/2024, 09:14:30] Bob: Morning Alice. How's the new project?
+[15/03/2024, 09:15:12] Alice: Going well. Multiline test:
+This is the second line of the same message.
+And a third line.
+[15/03/2024, 09:16:00] Bob: Nice. Send the link?
+[15/03/2024, 09:17:45] Alice: https://example.com/project
