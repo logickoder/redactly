@@ -2,7 +2,7 @@ import { type FC, useCallback, useMemo, useState } from 'react';
 import { useAppSettings } from '../hooks/useStore';
 import { Edit2, Save, Search, Trash2, Users, X } from 'lucide-react';
 import { motion } from 'framer-motion';
-import PageHeader from '../components/PageHeader';
+import PageHeader from '../components/ui/PageHeader';
 
 const Mappings: FC = () => {
   const { nameMap, updateNameMap, deleteNameMapping } = useAppSettings();
@@ -99,7 +99,7 @@ const Mappings: FC = () => {
                   key={name}
                   className="transition-colors"
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = 'rgba(99,102,241,0.04)')
+                    (e.currentTarget.style.background = 'var(--tint-primary-faint)')
                   }
                   onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                 >
@@ -118,7 +118,7 @@ const Mappings: FC = () => {
                     ) : (
                       <span
                         className="text-primary rounded-full px-2.5 py-1 text-xs font-semibold"
-                        style={{ background: 'rgba(99,102,241,0.1)' }}
+                        style={{ background: 'var(--tint-primary)' }}
                       >
                         {alias}
                       </span>
@@ -182,7 +182,7 @@ const Mappings: FC = () => {
             className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
             style={{
               backgroundImage:
-                'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(99,102,241,0.12))',
+                'var(--gradient-primary-tint-soft)',
             }}
           >
             <Users size={32} style={{ color: '#8B5CF6' }} />

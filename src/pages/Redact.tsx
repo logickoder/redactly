@@ -1,27 +1,30 @@
 import { type FC, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { type Message, parseChat } from '../utils/chatParser';
+import { type Message } from '../features/chat';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useAppSettings } from '../hooks/useStore';
-import * as chatStorage from '../utils/chatStorage';
+import { useRedactWorker } from '../hooks/useRedactWorker';
+import { trackEvent } from '../features/analytics';
+import * as chatStorage from '../features/chat';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useToast } from '../context/ToastContext';
 import RedactInput from '../components/redact/RedactInput';
 import RedactConfiguration from '../components/redact/RedactConfiguration';
 import RedactPreview from '../components/redact/RedactPreview';
-import SaveChatModal from '../components/SaveChatModal';
-import AddParticipantModal from '../components/AddParticipantModal';
+import SaveChatModal from '../components/redact/SaveChatModal';
+import AddParticipantModal from '../components/redact/AddParticipantModal';
+import RedactSettings from '../components/redact/settings/RedactSettings';
 
 const Redact: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const {
     dateFormat,
-    setDateFormat,
     nameMap,
     updateNameMap,
     aggressiveRedaction,
-    toggleAggressiveRedaction,
+    pii,
+    nsfw,
   } = useAppSettings();
   const toast = useToast();
 
@@ -41,50 +44,49 @@ const Redact: FC = () => {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [defaultChatName, setDefaultChatName] = useState('');
   const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const aliasDebounceTimer = useRef<number | null>(null);
   const hasInitialized = useRef(false);
 
-  const redactedContent = useMemo(() => {
-    if (parsedMessages.length === 0) return '';
+  const worker = useRedactWorker();
 
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
-    if (end) end.setHours(23, 59, 59, 999);
+  const [redactedContent, setRedactedContent] = useState<string>('');
 
-    return parsedMessages
-      .filter((msg) => {
-        if (!msg.date) return true;
-        if (start && msg.date < start) return false;
-        return !(end && msg.date > end);
+  useEffect(() => {
+    let cancelled = false;
+    if (parsedMessages.length === 0) {
+      setRedactedContent('');
+      return;
+    }
+    worker
+      .redact(parsedMessages, {
+        aliases: debouncedAliases,
+        aggressiveRedaction,
+        startDate,
+        endDate,
+        pii,
+        nsfw,
       })
-      .map((msg) => {
-        let line = msg.originalString;
-        Object.entries(debouncedAliases).forEach(([name, aliasName]) => {
-          const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          line = line.replace(new RegExp(escaped, 'gi'), aliasName);
-          if (aggressiveRedaction) {
-            name
-              .split(/\s+/)
-              .filter((p) => p.length > 2)
-              .forEach((part) => {
-                const escapedPart = part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                line = line.replace(
-                  new RegExp(`\\b${escapedPart}\\b`, 'gi'),
-                  aliasName,
-                );
-              });
-          }
-        });
-        return line;
+      .then((out) => {
+        if (!cancelled) setRedactedContent(out);
       })
-      .join('\n');
+      .catch((err) => {
+        console.error('Redaction failed:', err);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // worker reference is stable across renders; redaction inputs cover the meaningful deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     parsedMessages,
     debouncedAliases,
     startDate,
     endDate,
     aggressiveRedaction,
+    pii,
+    nsfw,
   ]);
 
   const steps = useMemo(() => ['Input', 'Configure', 'Export'], []);
@@ -96,8 +98,7 @@ const Redact: FC = () => {
   const handleParse = async (text: string) => {
     setIsParsing(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      const result = parseChat(text, dateFormat);
+      const result = await worker.parse(text, dateFormat);
       setParsedMessages(result.messages);
       setParticipants(result.participants);
 
@@ -114,11 +115,14 @@ const Redact: FC = () => {
         if (last) setEndDate(last.toISOString().split('T')[0]);
         setStep(1);
         toast.show(`Parsed ${result.messages.length} messages.`, 'success');
+        trackEvent('parse/success');
       } else {
         toast.show('No messages found. Please check the format.', 'error');
+        trackEvent('parse/fail');
       }
     } catch {
       toast.show('Error parsing chat. Please check the format.', 'error');
+      trackEvent('parse/fail');
     } finally {
       setIsParsing(false);
     }
@@ -143,6 +147,7 @@ const Redact: FC = () => {
   const copyToClipboard = async () => {
     await navigator.clipboard.writeText(redactedContent);
     toast.show('Copied to clipboard!', 'success');
+    trackEvent('export/copy');
   };
 
   const downloadFile = () => {
@@ -156,6 +161,7 @@ const Redact: FC = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     toast.show('File downloaded!', 'success');
+    trackEvent('export/download');
   };
 
   const handleSaveClick = () => {
@@ -182,6 +188,7 @@ const Redact: FC = () => {
         originalContent: content,
       });
       toast.show('Chat saved!', 'success');
+      trackEvent('history/save');
       navigate('/history');
     } catch {
       toast.show('Failed to save chat', 'error');
@@ -199,16 +206,21 @@ const Redact: FC = () => {
     };
   }, [aliases]);
 
-  if (location.state?.fileContent && !hasInitialized.current) {
-    setContent(location.state.fileContent);
-    void handleParse(location.state.fileContent);
-    hasInitialized.current = true;
-  } else if (location.state?.savedChat && !hasInitialized.current) {
-    const saved = location.state.savedChat;
-    setContent(saved.originalContent || '');
-    if (saved.originalContent) void handleParse(saved.originalContent);
-    hasInitialized.current = true;
-  }
+  useEffect(() => {
+    if (hasInitialized.current) return;
+    if (location.state?.fileContent) {
+      setContent(location.state.fileContent);
+      void handleParse(location.state.fileContent);
+      hasInitialized.current = true;
+    } else if (location.state?.savedChat) {
+      const saved = location.state.savedChat;
+      setContent(saved.originalContent || '');
+      if (saved.originalContent) void handleParse(saved.originalContent);
+      hasInitialized.current = true;
+    }
+    // handleParse intentionally omitted — bootstrapping should run once per route entry
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   return (
     <motion.div
@@ -239,7 +251,7 @@ const Redact: FC = () => {
                       step === index
                         ? {
                             backgroundImage:
-                              'linear-gradient(135deg, #6366F1, #8B5CF6)',
+                              'var(--gradient-primary)',
                           }
                         : {}
                     }
@@ -275,10 +287,7 @@ const Redact: FC = () => {
             handleParse={handleParse}
             step={step}
             setStep={setStep}
-            dateFormat={dateFormat}
-            setDateFormat={setDateFormat}
-            aggressiveRedaction={aggressiveRedaction}
-            toggleAggressiveRedaction={toggleAggressiveRedaction}
+            onOpenSettings={() => setIsSettingsOpen(true)}
             isParsing={isParsing}
             isFromHistory={isFromHistory}
           />
@@ -329,6 +338,11 @@ const Redact: FC = () => {
         nameMap={nameMap}
         existingParticipants={participants}
         nextAliasLabel={nextAliasLabel}
+      />
+
+      <RedactSettings
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
       />
     </motion.div>
   );

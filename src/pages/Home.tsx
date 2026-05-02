@@ -115,7 +115,7 @@ const Home: FC = () => {
             <div
               className="mb-5 inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2 shadow-sm"
               style={{
-                background: 'rgba(99,102,241,0.08)',
+                background: 'var(--tint-primary-soft)',
                 borderColor: 'rgba(99,102,241,0.2)',
               }}
             >
@@ -167,7 +167,7 @@ const Home: FC = () => {
         <motion.div
           className="relative w-full max-w-md shrink-0 overflow-hidden rounded-3xl p-px shadow-2xl"
           style={{
-            backgroundImage: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+            backgroundImage: 'var(--gradient-primary)',
           }}
           variants={itemVariants}
           whileHover={{ scale: 1.015 }}
@@ -193,7 +193,7 @@ const Home: FC = () => {
                   className="flex h-16 w-16 items-center justify-center rounded-2xl transition-transform group-hover:scale-110"
                   style={{
                     backgroundImage:
-                      'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.12))',
+                      'var(--gradient-primary-tint-soft)',
                   }}
                 >
                   <Upload className="text-primary h-8 w-8" />

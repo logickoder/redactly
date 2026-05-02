@@ -5,7 +5,7 @@ import React, {
   useContext,
   useState,
 } from 'react';
-import { ToastContainer } from '../components/Toast';
+import { ToastContainer } from '../components/ui/Toast';
 
 export type ToastType = 'success' | 'error' | 'info';
 

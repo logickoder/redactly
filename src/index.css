@@ -25,6 +25,22 @@
     --color-border: #E0D9FF;
     --color-text: #1E1B4B;
     --color-text-muted: #6B7280;
+
+    /* Tinted overlays — semi-transparent primary used as soft backgrounds. */
+    --tint-primary-faint: rgba(99, 102, 241, 0.04);
+    --tint-primary-subtle: rgba(99, 102, 241, 0.05);
+    --tint-primary-soft: rgba(99, 102, 241, 0.08);
+    --tint-primary: rgba(99, 102, 241, 0.10);
+    --tint-primary-strong: rgba(99, 102, 241, 0.12);
+    --tint-primary-stronger: rgba(99, 102, 241, 0.15);
+    --tint-secondary-strong: rgba(139, 92, 246, 0.12);
+    --tint-secondary-stronger: rgba(139, 92, 246, 0.15);
+
+    /* Brand gradients — keep hex literals here, consumers use the var. */
+    --gradient-primary: linear-gradient(135deg, #6366F1, #8B5CF6);
+    --gradient-primary-h: linear-gradient(90deg, #6366F1, #8B5CF6);
+    --gradient-primary-tint: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+    --gradient-primary-tint-soft: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.12));
 }
 
 .dark {
@@ -38,6 +54,9 @@
     --color-border: #2D2850;
     --color-text: #EDE9FE;
     --color-text-muted: #9CA3AF;
+
+    --gradient-primary: linear-gradient(135deg, #818CF8, #A78BFA);
+    --gradient-primary-h: linear-gradient(90deg, #818CF8, #A78BFA);
 }
 
 @layer base {
@@ -50,24 +69,16 @@
 @layer utilities {
     .gradient-text {
         @apply bg-clip-text text-transparent;
-        background-image: linear-gradient(135deg, #6366F1, #8B5CF6);
-    }
-
-    .dark .gradient-text {
-        background-image: linear-gradient(135deg, #818CF8, #A78BFA);
+        background-image: var(--gradient-primary);
     }
 
     .gradient-primary {
-        background-image: linear-gradient(135deg, #6366F1, #8B5CF6);
-    }
-
-    .dark .gradient-primary {
-        background-image: linear-gradient(135deg, #818CF8, #A78BFA);
+        background-image: var(--gradient-primary);
     }
 
     .btn-gradient {
         @apply text-white font-medium rounded-xl px-5 py-2.5 transition-all duration-200;
-        background-image: linear-gradient(135deg, #6366F1, #8B5CF6);
+        background-image: var(--gradient-primary);
         box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.35);
     }
 

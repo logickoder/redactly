@@ -34,6 +34,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Write build env from secrets
+        env:
+          VITE_GOATCOUNTER_CODE: ${{ secrets.GOATCOUNTER_CODE }}
+        run: |
+          # Vite picks this up at build time; missing secret -> empty value -> analytics disabled.
+          {
+            echo "VITE_GOATCOUNTER_CODE=${VITE_GOATCOUNTER_CODE}"
+          } > .env.production.local
+
       - name: Build project
         run: pnpm run build
 

@@ -33,7 +33,7 @@ const RedactPreview: FC<RedactPreviewProps> = ({
         {redactedContent.length > 0 && (
           <div
             className="text-primary inline-flex items-center gap-1.5 self-start rounded-full px-2.5 py-1 text-xs font-medium sm:self-auto"
-            style={{ background: 'rgba(99,102,241,0.1)' }}
+            style={{ background: 'var(--tint-primary)' }}
           >
             <span>{lines.length.toLocaleString()} lines</span>
             <span className="text-primary/40">·</span>

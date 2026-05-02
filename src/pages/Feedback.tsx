@@ -75,7 +75,7 @@ const Feedback: FC = () => {
           className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
           style={{
             backgroundImage:
-              'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.12))',
+              'var(--gradient-primary-tint-soft)',
           }}
         >
           <MessageSquare size={26} className="text-primary" />
@@ -108,6 +108,7 @@ const Feedback: FC = () => {
                   onClick={() => setRating(star)}
                   onMouseEnter={() => setHoveredStar(star)}
                   onMouseLeave={() => setHoveredStar(0)}
+                  aria-label={`Rate ${star} ${star === 1 ? 'star' : 'stars'}`}
                   className="p-1 transition-transform hover:scale-110"
                 >
                   <Star

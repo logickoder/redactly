@@ -1,10 +1,11 @@
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import * as chatStorage from '../utils/chatStorage';
-import { type ChatPreview } from '../utils/chatStorage';
+import * as chatStorage from '../features/chat';
+import { type ChatPreview } from '../features/chat';
+import { trackEvent } from '../features/analytics';
 import { ArrowRight, Clock, FileText, Trash2 } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
-import PageHeader from '../components/PageHeader';
+import PageHeader from '../components/ui/PageHeader';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -32,6 +33,7 @@ const History: FC = () => {
     async (preview: ChatPreview) => {
       const fullChat = await chatStorage.loadFullChat(preview.id);
       if (fullChat) {
+        trackEvent('history/load');
         navigate('/redact', { state: { savedChat: fullChat } });
       }
     },
@@ -42,6 +44,7 @@ const History: FC = () => {
     try {
       await chatStorage.deleteChat(id);
       setChats((prev) => prev.filter((c) => c.id !== id));
+      trackEvent('history/delete');
     } catch {
       console.error('Failed to delete chat');
     }
@@ -93,7 +96,7 @@ const History: FC = () => {
             className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
             style={{
               backgroundImage:
-                'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.12))',
+                'var(--gradient-primary-tint-soft)',
             }}
           >
             <Clock size={32} className="text-primary" />
@@ -158,7 +161,7 @@ const SavedChatItem: FC<{
     >
       <div
         className="h-1 w-full shrink-0"
-        style={{ backgroundImage: 'linear-gradient(90deg, #6366F1, #8B5CF6)' }}
+        style={{ backgroundImage: 'var(--gradient-primary-h)' }}
       />
 
       <div className="flex flex-1 flex-col p-5">

@@ -1,0 +1,8 @@
+15/03/2024, 09:14 - Messages and calls are end-to-end encrypted. No one outside of this chat, not even WhatsApp, can read or listen to them.
+15/03/2024, 09:14 - Alice: Hey Bob, can you send me the report?
+15/03/2024, 09:15 - Bob: Sure thing. Will email it to alice@example.com in 5 mins.
+15/03/2024, 09:16 - Alice: Thanks. Also call me on +1 (555) 010-2345 if anything.
+15/03/2024, 09:17 - Bob: Got it. Check https://drive.example.com/file/abc for the doc.
+15/03/2024, 09:20 - Alice: This message was deleted
+15/03/2024, 09:21 - Bob: <Media omitted>
+15/03/2024, 09:25 - Alice: Edited message goes here <This message was edited>
