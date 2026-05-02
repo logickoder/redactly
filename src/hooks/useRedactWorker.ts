@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import RedactWorker from '../workers/redact.worker.ts?worker';
+import RedactWorker from '../workers/redact.worker?worker';
 import type {
   WorkerRequest,
   WorkerResponse,
@@ -26,69 +26,110 @@ type DistributiveOmit<T, K extends keyof T> = T extends unknown
 const supportsWorker = (): boolean =>
   typeof Worker !== 'undefined' && typeof window !== 'undefined';
 
-export const useRedactWorker = (): RedactWorkerApi => {
-  const workerRef = useRef<Worker | null>(null);
-  const callbacksRef = useRef(
-    new Map<number, (resp: WorkerResponse) => void>(),
-  );
-  const idRef = useRef(0);
+// Module-level singleton: avoids React StrictMode's mount/unmount/remount cycle
+// terminating the worker mid-init in dev. The worker lives for the page's lifetime.
+let sharedWorker: Worker | null | undefined;
+const sharedCallbacks = new Map<number, (resp: WorkerResponse) => void>();
+let sharedIdCounter = 0;
 
-  useEffect(() => {
-    if (!supportsWorker()) return;
-
-    const worker = new RedactWorker();
-    const callbacks = callbacksRef.current;
-    workerRef.current = worker;
-    worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
-      const cb = callbacks.get(e.data.id);
+const getWorker = (): Worker | null => {
+  if (sharedWorker !== undefined) return sharedWorker;
+  if (!supportsWorker()) {
+    sharedWorker = null;
+    return null;
+  }
+  try {
+    const w = new RedactWorker();
+    console.debug('[redact-worker] constructed');
+    w.onmessage = (e: MessageEvent<WorkerResponse>) => {
+      const cb = sharedCallbacks.get(e.data.id);
       if (cb) {
+        sharedCallbacks.delete(e.data.id);
         cb(e.data);
-        callbacks.delete(e.data.id);
       }
     };
-    worker.onerror = (err) => {
-      console.error('Redact worker error:', err);
+    w.onerror = (err) => {
+      console.error(
+        'Redact worker runtime error:',
+        err.message || err,
+        err.filename ? `${err.filename}:${err.lineno}:${err.colno}` : '',
+      );
+      const pending = Array.from(sharedCallbacks.entries());
+      sharedCallbacks.clear();
+      for (const [, cb] of pending) {
+        cb({
+          id: -1,
+          type: 'error',
+          error: err.message || 'Worker crashed',
+        });
+      }
     };
-    return () => {
-      worker.terminate();
-      workerRef.current = null;
-      callbacks.clear();
+    w.onmessageerror = (e) => {
+      console.error('Redact worker message error:', e);
     };
+    sharedWorker = w;
+    return w;
+  } catch (err) {
+    console.warn(
+      'Redact worker failed to construct; falling back to main thread.',
+      err,
+    );
+    sharedWorker = null;
+    return null;
+  }
+};
+
+export const useRedactWorker = (): RedactWorkerApi => {
+  const apiRef = useRef<RedactWorkerApi | null>(null);
+
+  if (apiRef.current === null) {
+    const send = <T>(payload: DistributiveOmit<WorkerRequest, 'id'>): Promise<T> =>
+      new Promise<T>((resolve, reject) => {
+        const worker = getWorker();
+        if (!worker) {
+          reject(new Error('Worker not available'));
+          return;
+        }
+        const id = ++sharedIdCounter;
+
+        const timeout = setTimeout(() => {
+          if (sharedCallbacks.delete(id)) {
+            reject(new Error('Worker request timed out (30s)'));
+          }
+        }, 30_000);
+
+        sharedCallbacks.set(id, (resp) => {
+          clearTimeout(timeout);
+          if (resp.type === 'error') {
+            reject(new Error(resp.error));
+          } else {
+            resolve(resp.result as T);
+          }
+        });
+        console.debug('[redact-worker] →', payload.type, 'id=', id);
+        worker.postMessage({ ...payload, id } as WorkerRequest);
+      });
+
+    apiRef.current = {
+      parse: async (text, dateFormat) => {
+        if (getWorker()) {
+          return send<ParseResult>({ type: 'parse', text, dateFormat });
+        }
+        return parseChat(text, dateFormat);
+      },
+      redact: async (messages, settings) => {
+        if (getWorker()) {
+          return send<string>({ type: 'redact', messages, settings });
+        }
+        return redactMessages(messages, settings);
+      },
+    };
+  }
+
+  // Touch the worker once on mount so it boots in parallel with first user input.
+  useEffect(() => {
+    getWorker();
   }, []);
 
-  type Payload = DistributiveOmit<WorkerRequest, 'id'>;
-
-  const send = <T>(payload: Payload): Promise<T> =>
-    new Promise<T>((resolve, reject) => {
-      const worker = workerRef.current;
-      if (!worker) {
-        reject(new Error('Worker not available'));
-        return;
-      }
-      const id = ++idRef.current;
-      callbacksRef.current.set(id, (resp) => {
-        if (resp.type === 'error') {
-          reject(new Error(resp.error));
-        } else {
-          resolve(resp.result as T);
-        }
-      });
-      worker.postMessage({ ...payload, id } as WorkerRequest);
-    });
-
-  return {
-    parse: async (text, dateFormat) => {
-      if (workerRef.current) {
-        return send<ParseResult>({ type: 'parse', text, dateFormat });
-      }
-      // Fallback: synchronous on the main thread.
-      return parseChat(text, dateFormat);
-    },
-    redact: async (messages, settings) => {
-      if (workerRef.current) {
-        return send<string>({ type: 'redact', messages, settings });
-      }
-      return redactMessages(messages, settings);
-    },
-  };
+  return apiRef.current;
 };

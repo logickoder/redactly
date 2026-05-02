@@ -1,10 +1,11 @@
 /// <reference lib="webworker" />
 
-import { type Message, type ParseResult, parseChat } from '../features/chat';
-import {
-  redactMessages,
-  type RedactionSettings,
-} from '../features/redaction';
+// Direct sub-module imports (bypassing the feature barrel) so the worker bundle
+// stays minimal — no IndexedDB / pako / storage code shipped in the worker.
+import { parseChat } from '../features/chat/parser';
+import type { Message, ParseResult } from '../features/chat/types';
+import { redactMessages } from '../features/redaction/core';
+import type { RedactionSettings } from '../features/redaction/types';
 
 export type WorkerRequest =
   | { id: number; type: 'parse'; text: string; dateFormat: string }

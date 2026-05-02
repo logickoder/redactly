@@ -76,6 +76,7 @@ tests/                     Test code + fixtures. NEVER ships in production bundl
   - one or more implementation files (e.g. `core.ts`, `parser.ts`, `storage.ts`)
   - `index.ts` — **barrel export.** Re-exports the public surface only. Internal helpers must NOT be re-exported.
 - Consumers ALWAYS import from `'../features/<name>'` (the barrel), never from a deep path like `'../features/<name>/core'`. The barrel is the contract; deep imports break the boundary.
+- **Worker exception:** files in `src/workers/` MAY import directly from `features/<name>/<file>` to keep the worker bundle lean (avoid pulling in IndexedDB / storage / compression code that the worker doesn't run). Document the import with a one-line comment when you do this.
 - Inside a feature, files import from sibling files via relative paths (e.g. `./types`, `./core`). Do NOT import a feature's own barrel from inside that feature — circular.
 - A feature MAY import from another feature only via that other feature's barrel. Cross-feature deep imports are forbidden.
 - A feature MUST NOT import from `pages/`, `components/`, or `hooks/`. Direction of dependency is one-way: UI → features → lib. Features may import from `lib/`.
