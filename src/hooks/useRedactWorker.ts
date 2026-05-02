@@ -40,8 +40,10 @@ const getWorker = (): Worker | null => {
   }
   try {
     const w = new RedactWorker();
-    console.debug('[redact-worker] constructed');
+    if (import.meta.env.DEV) console.debug('[redact-worker] constructed');
     w.onmessage = (e: MessageEvent<WorkerResponse>) => {
+      if (import.meta.env.DEV)
+        console.debug('[redact-worker] ←', e.data.type, 'id=', e.data.id);
       const cb = sharedCallbacks.get(e.data.id);
       if (cb) {
         sharedCallbacks.delete(e.data.id);
@@ -106,7 +108,8 @@ export const useRedactWorker = (): RedactWorkerApi => {
             resolve(resp.result as T);
           }
         });
-        console.debug('[redact-worker] →', payload.type, 'id=', id);
+        if (import.meta.env.DEV)
+          console.debug('[redact-worker] →', payload.type, 'id=', id);
         worker.postMessage({ ...payload, id } as WorkerRequest);
       });
 

@@ -97,7 +97,7 @@ const Layout: FC = () => {
             <span
               className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-white"
               style={{
-                backgroundImage: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+                backgroundImage: 'var(--gradient-primary)',
               }}
             >
               <Lock size={10} />

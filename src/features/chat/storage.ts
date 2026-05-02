@@ -18,16 +18,10 @@ let dbPromise: Promise<IDBPDatabase> | null = null;
 const getDB = async (): Promise<IDBPDatabase> => {
   if (!dbPromise) {
     dbPromise = openDB(DB_NAME, DB_VERSION, {
-      upgrade(db, oldVersion) {
-        console.log(
-          `Upgrading database from version ${oldVersion} to ${DB_VERSION}`,
-        );
-
+      upgrade(db) {
         if (!db.objectStoreNames.contains(CHATS_STORE)) {
-          console.log('Creating chats object store...');
           const store = db.createObjectStore(CHATS_STORE, { keyPath: 'id' });
           store.createIndex('date', 'date');
-          console.log('Chats object store created successfully');
         }
       },
     });
@@ -38,7 +32,6 @@ const getDB = async (): Promise<IDBPDatabase> => {
 export const initDB = async (): Promise<void> => {
   try {
     await getDB();
-    console.log('IndexedDB initialized successfully');
   } catch (error) {
     console.error('Error initializing IndexedDB:', error);
     throw error;
@@ -52,12 +45,8 @@ export const resetDB = async (): Promise<void> => {
       db.close();
       dbPromise = null;
     }
-
     await deleteDB(DB_NAME);
-    console.log('Database deleted');
-
     await initDB();
-    console.log('Database reinitialized');
   } catch (error) {
     console.error('Error resetting database:', error);
     throw error;

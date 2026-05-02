@@ -317,7 +317,7 @@ const PiiToggle: FC<PiiToggleProps> = ({
     <span className="text-text text-sm">{label}</span>
     <span
       className="text-primary ml-auto rounded-full px-2 py-0.5 font-mono text-xs"
-      style={{ background: 'rgba(99,102,241,0.1)' }}
+      style={{ background: 'var(--tint-primary)' }}
     >
       {placeholder}
     </span>

@@ -110,7 +110,7 @@ const AddParticipantModal: FC<AddParticipantModalProps> = ({
                     <span className="text-text font-medium">{n}</span>
                     <span
                       className="text-primary rounded-full px-2 py-0.5 text-xs font-semibold"
-                      style={{ background: 'rgba(99,102,241,0.1)' }}
+                      style={{ background: 'var(--tint-primary)' }}
                     >
                       {a}
                     </span>

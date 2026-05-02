@@ -25,7 +25,7 @@ const SectionHeader: FC<{
   icon,
   label,
   iconColor = 'text-primary',
-  iconBg = 'rgba(99,102,241,0.12)',
+  iconBg = 'var(--tint-primary-strong)',
   trailing,
 }) => (
   <h3 className="text-text-muted mb-3 flex items-center gap-2 text-xs font-semibold tracking-wider uppercase">
@@ -102,18 +102,19 @@ const RedactConfiguration: FC<RedactConfigurationProps> = ({
         <SectionHeader
           icon={<User size={12} />}
           label="Participants"
-          iconBg="rgba(139,92,246,0.12)"
+          iconBg="var(--tint-secondary-strong)"
           iconColor="text-secondary"
           trailing={
             <div className="flex items-center gap-2">
               <span
                 className="text-primary rounded-full px-2 py-0.5 text-xs font-semibold"
-                style={{ background: 'rgba(99,102,241,0.1)' }}
+                style={{ background: 'var(--tint-primary)' }}
               >
                 {participants.length}
               </span>
               {aggressiveRedaction && (
                 <button
+                  type="button"
                   onClick={onAddParticipant}
                   className="text-primary hover:bg-primary/10 flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-colors"
                   title="Add participant manually"
@@ -130,7 +131,7 @@ const RedactConfiguration: FC<RedactConfigurationProps> = ({
             <div
               key={participant}
               className="flex flex-col gap-1.5 rounded-xl p-2.5 transition-colors sm:flex-row sm:items-center sm:gap-2"
-              style={{ background: 'rgba(99,102,241,0.04)' }}
+              style={{ background: 'var(--tint-primary-faint)' }}
             >
               <div
                 className="text-text truncate text-sm font-medium sm:w-1/3"
@@ -153,9 +154,11 @@ const RedactConfiguration: FC<RedactConfigurationProps> = ({
                   placeholder="Alias"
                 />
                 <button
+                  type="button"
                   onClick={() =>
                     saveAliasToMap(participant, aliases[participant])
                   }
+                  aria-label={`Save alias for ${participant}`}
                   className="text-text-muted hover:text-primary hover:bg-primary/10 rounded-lg p-2 transition-all"
                   title="Save alias for future chats"
                 >

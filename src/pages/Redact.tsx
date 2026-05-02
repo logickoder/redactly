@@ -244,7 +244,7 @@ const Redact: FC = () => {
                       step === index
                         ? {
                             backgroundImage:
-                              'linear-gradient(135deg, #6366F1, #8B5CF6)',
+                              'var(--gradient-primary)',
                           }
                         : {}
                     }

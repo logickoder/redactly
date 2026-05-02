@@ -27,8 +27,9 @@ Adding a new dependency requires: (a) a justification in PR description, (b) con
 ## 2. Architecture Rules
 
 ### 2.1 Privacy invariant (non-negotiable)
-- **Zero network egress for user data.** No `fetch`/`XMLHttpRequest`/`WebSocket`/analytics SDK that touches chat content, names, mappings, or history.
-- Network calls allowed only for: (i) loading the app shell + fonts (Google Fonts is the only external host today, see [src/index.css:1](src/index.css#L1)), (ii) PWA service worker assets.
+- **Zero automatic network egress for chat data.** No `fetch`/`XMLHttpRequest`/`WebSocket`/analytics SDK that touches chat content, names, mappings, or history. No silent telemetry of any kind.
+- Network calls allowed only for: (i) loading the app shell + fonts (Google Fonts is the only external host today, see [src/index.css:1](src/index.css#L1)), (ii) PWA service worker assets, (iii) **user-initiated, explicit form submissions** to a documented endpoint — currently only the Feedback form ([src/pages/Feedback.tsx](src/pages/Feedback.tsx)) which posts a free-form message and optional email to Formspree. The user chooses what to type and clicks Send.
+- The Feedback endpoint MUST never auto-attach chat data, names, or any state from `useAppSettings` / IndexedDB. Only the literal form fields.
 - Any new network call MUST be reviewed in PR.
 
 ### 2.2 Data flow
@@ -238,7 +239,7 @@ These exist as duplicates today and MUST be consolidated when next touched:
 - Section header (eyebrow + icon chip) — `SectionHeader` is currently private to [src/components/redact/RedactConfiguration.tsx:18](src/components/redact/RedactConfiguration.tsx#L18). Promote to `src/components/SectionHeader.tsx` on next reuse.
 - Virtualized monospace panel — repeated structurally in `RedactInput` step ≥1 view and `RedactPreview`. Extract to `src/components/VirtualizedTextPanel.tsx` if a third use appears.
 - ~~Regex special-character escape — currently inlined twice in `src/pages/Redact.tsx`. Extract to `escapeRegex(str: string): string`.~~ ✅ Extracted to [src/lib/regex.ts](src/lib/regex.ts).
-- Tinted-background recipes (`rgba(99,102,241,0.04|0.05|0.08|0.10|0.12)`) — promote the most common to CSS custom properties (`--tint-primary-soft`, `--tint-primary`, `--tint-primary-strong`) and update §2 of [DESIGN.md](DESIGN.md).
+- ~~Tinted-background recipes — promote to CSS custom properties.~~ ✅ Extracted to `--tint-primary-faint|subtle|soft|...|strong` and `--tint-secondary-strong|stronger` in [src/index.css](src/index.css). Brand gradients also extracted to `--gradient-primary|primary-h|primary-tint|primary-tint-soft`. See [DESIGN.md](DESIGN.md) §2.
 
 ### 9a.5 What is NOT duplication
 

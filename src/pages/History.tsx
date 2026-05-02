@@ -93,7 +93,7 @@ const History: FC = () => {
             className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
             style={{
               backgroundImage:
-                'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.12))',
+                'var(--gradient-primary-tint-soft)',
             }}
           >
             <Clock size={32} className="text-primary" />
@@ -158,7 +158,7 @@ const SavedChatItem: FC<{
     >
       <div
         className="h-1 w-full shrink-0"
-        style={{ backgroundImage: 'linear-gradient(90deg, #6366F1, #8B5CF6)' }}
+        style={{ backgroundImage: 'var(--gradient-primary-h)' }}
       />
 
       <div className="flex flex-1 flex-col p-5">

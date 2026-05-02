@@ -51,18 +51,30 @@ All colors defined as CSS custom properties in [src/index.css:17-41](src/index.c
 - Toasts carry their own color logic via [src/context/ToastContext.tsx](src/context/ToastContext.tsx).
 
 ### Tinted overlays
-Semi-transparent primary tints used for soft backgrounds. Standard recipes:
-- `rgba(99,102,241,0.04)` — subtle row hover/idle
-- `rgba(99,102,241,0.05)` — settings panel background
-- `rgba(99,102,241,0.08)` — button hover
-- `rgba(99,102,241,0.10)` — pill background, icon button hover, badge background
-- `rgba(99,102,241,0.12)` — section header icon background
-- `rgba(99,102,241,0.15)` — gradient overlay component
-- `rgba(139,92,246,0.12)` — secondary section header icon background
-- `rgba(139,92,246,0.15)` — secondary gradient overlay
-- `rgba(0,0,0,0.5)` — modal backdrop
+Semi-transparent primary tints used for soft backgrounds. Defined as CSS custom properties in [src/index.css](src/index.css). Reference via `var(--tint-*)`.
 
-When adding a new tint depth, prefer the closest existing value over inventing a new one.
+| Variable | Value | Usage |
+|---|---|---|
+| `--tint-primary-faint` | `rgba(99,102,241,0.04)` | Subtle row hover/idle |
+| `--tint-primary-subtle` | `rgba(99,102,241,0.05)` | Settings panel background |
+| `--tint-primary-soft` | `rgba(99,102,241,0.08)` | Button hover |
+| `--tint-primary` | `rgba(99,102,241,0.10)` | Pill / badge / icon-button hover |
+| `--tint-primary-strong` | `rgba(99,102,241,0.12)` | Section header icon background |
+| `--tint-primary-stronger` | `rgba(99,102,241,0.15)` | Heavy gradient overlay |
+| `--tint-secondary-strong` | `rgba(139,92,246,0.12)` | Secondary section header icon background |
+| `--tint-secondary-stronger` | `rgba(139,92,246,0.15)` | Secondary gradient overlay |
+
+Modal backdrop uses literal `rgba(0,0,0,0.5)` (not themed). When adding a new tint depth, prefer the closest existing variable over inventing a new one.
+
+### Brand gradients
+Defined in [src/index.css](src/index.css). Always reference via `var(--gradient-*)`:
+
+| Variable | Composition | Usage |
+|---|---|---|
+| `--gradient-primary` | `linear-gradient(135deg, primary → secondary)` | Buttons, badges, hero accents (auto-themes for dark mode) |
+| `--gradient-primary-h` | `linear-gradient(90deg, primary → secondary)` | Modal accent strip, card top border |
+| `--gradient-primary-tint` | 135° w/ 0.15 alpha | Modal icon-chip background |
+| `--gradient-primary-tint-soft` | 135° w/ 0.12 alpha | Empty-state icon-chip background |
 
 ---
 

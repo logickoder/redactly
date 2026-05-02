@@ -10,7 +10,7 @@ const PageHeader: FC<PageHeaderProps> = ({ title, subtitle }) => (
     <h1 className="text-text text-3xl font-bold">{title}</h1>
     <div
       className="mt-2 h-1 w-16 rounded-full"
-      style={{ backgroundImage: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}
+      style={{ backgroundImage: 'var(--gradient-primary)' }}
     />
     {subtitle && <p className="text-text-muted mt-2 text-sm">{subtitle}</p>}
   </div>

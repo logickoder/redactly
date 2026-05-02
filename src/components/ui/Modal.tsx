@@ -39,7 +39,7 @@ const Modal: FC<ModalProps> = ({ isOpen, onClose, title, icon, children }) => {
             <div
               className="h-1 w-full"
               style={{
-                backgroundImage: 'linear-gradient(90deg, #6366F1, #8B5CF6)',
+                backgroundImage: 'var(--gradient-primary-h)',
               }}
             />
 
@@ -50,7 +50,7 @@ const Modal: FC<ModalProps> = ({ isOpen, onClose, title, icon, children }) => {
                     className="flex h-8 w-8 items-center justify-center rounded-lg"
                     style={{
                       backgroundImage:
-                        'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15))',
+                        'var(--gradient-primary-tint)',
                     }}
                   >
                     <span className="text-primary">{icon}</span>
