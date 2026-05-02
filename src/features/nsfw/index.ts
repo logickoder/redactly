@@ -5,4 +5,9 @@ export type {
   NsfwTierFlags,
 } from './types';
 export { defaultNsfwSettings } from './types';
-export { applyNsfw } from './core';
+export {
+  applyNsfw,
+  applyCompiledNsfw,
+  compileNsfwRules,
+  type CompiledNsfwRules,
+} from './core';

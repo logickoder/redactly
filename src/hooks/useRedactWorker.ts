@@ -59,6 +59,15 @@ const getWorker = (): Worker | null => {
       );
       const pending = Array.from(sharedCallbacks.entries());
       sharedCallbacks.clear();
+      // Tear down the broken worker so the next request reconstructs (or falls
+      // back to main thread if reconstruction also fails). Leaving it alive
+      // would silently swallow future postMessages.
+      try {
+        w.terminate();
+      } catch {
+        /* ignore */
+      }
+      sharedWorker = undefined;
       for (const [, cb] of pending) {
         cb({
           id: -1,

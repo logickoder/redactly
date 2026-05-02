@@ -1,4 +1,3 @@
-import { useAppSettings } from '../../hooks/useStore';
 import type { AnalyticsEvent } from './types';
 
 const SCRIPT_ID = 'goatcounter-script';
@@ -34,11 +33,20 @@ const isDntOn = (): boolean =>
   (navigator.doNotTrack === '1' ||
     (navigator as { msDoNotTrack?: string }).msDoNotTrack === '1');
 
+// Caller (typically a UI hook) owns the consent state and pushes it in via
+// setAnalyticsEnabled(). Keeps this feature module headless — no React/store deps.
+let enabledFlag = false;
+
+export const setAnalyticsEnabled = (enabled: boolean): void => {
+  enabledFlag = enabled;
+  if (enabled) injectScript();
+};
+
 const isEnabled = (): boolean => {
   if (typeof window === 'undefined') return false;
   if (isDntOn()) return false;
   if (!SITE_CODE) return false;
-  return useAppSettings.getState().analytics.enabled;
+  return enabledFlag;
 };
 
 // Queue events fired between script-injection and script-ready; flushed on load.
@@ -91,7 +99,7 @@ const injectScript = (): void => {
   const script = document.createElement('script');
   script.id = SCRIPT_ID;
   script.async = true;
-  script.src = '//gc.zgo.at/count.js';
+  script.src = 'https://gc.zgo.at/count.js';
   script.dataset.goatcounter = `https://${SITE_CODE}.goatcounter.com/count`;
   document.head.appendChild(script);
   scriptInjected = true;
@@ -108,9 +116,8 @@ const queueOrSend = (vars: CountVars): void => {
   }
 };
 
-export const initAnalytics = (): void => {
-  if (!isEnabled()) return;
-  injectScript();
+export const initAnalytics = (enabled: boolean): void => {
+  setAnalyticsEnabled(enabled);
 };
 
 export const trackPageView = (path: string): void => {

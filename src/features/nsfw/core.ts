@@ -65,6 +65,19 @@ export interface CompiledNsfwRules {
   strategy: NsfwStrategy;
 }
 
+export const applyCompiledNsfw = (
+  text: string,
+  compiled: CompiledNsfwRules,
+): string => {
+  for (const { tier, regex } of compiled.tiers) {
+    text = text.replace(regex, (match) => {
+      if (compiled.allowSet.has(match.toLowerCase())) return match;
+      return replacementFor(tier, compiled.strategy);
+    });
+  }
+  return text;
+};
+
 export const compileNsfwRules = (
   settings: NsfwSettings,
 ): CompiledNsfwRules | null => {
@@ -98,12 +111,5 @@ export const compileNsfwRules = (
 export const applyNsfw = (text: string, settings: NsfwSettings): string => {
   const compiled = compileNsfwRules(settings);
   if (!compiled) return text;
-
-  for (const { tier, regex } of compiled.tiers) {
-    text = text.replace(regex, (match) => {
-      if (compiled.allowSet.has(match.toLowerCase())) return match;
-      return replacementFor(tier, compiled.strategy);
-    });
-  }
-  return text;
+  return applyCompiledNsfw(text, compiled);
 };

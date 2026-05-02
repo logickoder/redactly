@@ -1,5 +1,5 @@
 import type { Message } from '../chat';
-import { applyNsfw } from '../nsfw';
+import { applyCompiledNsfw, compileNsfwRules } from '../nsfw';
 import { applyPii, isPiiEnabled } from '../pii';
 import { escapeRegex } from '../../lib/regex';
 import type { RedactionSettings } from './types';
@@ -80,7 +80,10 @@ export const redactMessages = (
     settings.aggressiveRedaction,
   );
   const piiEnabled = settings.pii && isPiiEnabled(settings.pii);
-  const nsfwEnabled = settings.nsfw?.enabled ?? false;
+  // Compile NSFW rules ONCE per call — building 300+ wordlist regexes per line is too costly.
+  const nsfwCompiled = settings.nsfw?.enabled
+    ? compileNsfwRules(settings.nsfw)
+    : null;
 
   const redactNames = (line: string): string =>
     regex
@@ -93,7 +96,7 @@ export const redactMessages = (
   const transform = (line: string): string => {
     let out = redactNames(line);
     if (piiEnabled) out = applyPii(out, settings.pii!);
-    if (nsfwEnabled) out = applyNsfw(out, settings.nsfw!);
+    if (nsfwCompiled) out = applyCompiledNsfw(out, nsfwCompiled);
     return out;
   };
 
