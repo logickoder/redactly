@@ -1,4 +1,5 @@
 import type { Message } from '../chat';
+import { applyPii, isPiiEnabled } from '../pii';
 import { escapeRegex } from '../../lib/regex';
 import type { RedactionSettings } from './types';
 
@@ -77,11 +78,20 @@ export const redactMessages = (
     settings.aliases,
     settings.aggressiveRedaction,
   );
+  const piiEnabled = settings.pii && isPiiEnabled(settings.pii);
 
-  if (!regex) return filtered.map((m) => m.originalString).join('\n');
+  const redactNames = (line: string): string =>
+    regex
+      ? line.replace(regex, (match) => lookup.get(match.toLowerCase()) ?? match)
+      : line;
 
-  const apply = (line: string): string =>
-    line.replace(regex, (match) => lookup.get(match.toLowerCase()) ?? match);
+  // Names first so a name appearing inside an email local-part still becomes its
+  // alias before the email pattern masks the surrounding address.
+  const transform = (line: string): string => {
+    let out = redactNames(line);
+    if (piiEnabled) out = applyPii(out, settings.pii!);
+    return out;
+  };
 
-  return filtered.map((msg) => apply(msg.originalString)).join('\n');
+  return filtered.map((msg) => transform(msg.originalString)).join('\n');
 };

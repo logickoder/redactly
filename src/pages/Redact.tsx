@@ -23,6 +23,8 @@ const Redact: FC = () => {
     updateNameMap,
     aggressiveRedaction,
     toggleAggressiveRedaction,
+    pii,
+    togglePii,
   } = useAppSettings();
   const toast = useToast();
 
@@ -53,8 +55,16 @@ const Redact: FC = () => {
         aggressiveRedaction,
         startDate,
         endDate,
+        pii,
       }),
-    [parsedMessages, debouncedAliases, startDate, endDate, aggressiveRedaction],
+    [
+      parsedMessages,
+      debouncedAliases,
+      startDate,
+      endDate,
+      aggressiveRedaction,
+      pii,
+    ],
   );
 
   const steps = useMemo(() => ['Input', 'Configure', 'Export'], []);
@@ -254,6 +264,8 @@ const Redact: FC = () => {
             setDateFormat={setDateFormat}
             aggressiveRedaction={aggressiveRedaction}
             toggleAggressiveRedaction={toggleAggressiveRedaction}
+            pii={pii}
+            togglePii={togglePii}
             isParsing={isParsing}
             isFromHistory={isFromHistory}
           />

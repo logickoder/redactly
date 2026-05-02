@@ -31,7 +31,9 @@ describe('redactMessages', () => {
   });
 
   it('does not match name fragments inside larger words', () => {
-    const messages = [makeMessage({ originalString: 'Bob: alone with Johnson' })];
+    const messages = [
+      makeMessage({ originalString: 'Bob: alone with Johnson' }),
+    ];
     const out = redactMessages(messages, {
       aliases: { John: 'User A', Bob: 'User B' },
       aggressiveRedaction: false,
@@ -49,9 +51,11 @@ describe('redactMessages', () => {
   });
 
   it('redacts name parts under aggressive mode', () => {
-    const messages = [makeMessage({ originalString: 'King Ebuka: hi from Ebuka' })];
+    const messages = [
+      makeMessage({ originalString: 'Bob the Builder: hi from Bob' }),
+    ];
     const out = redactMessages(messages, {
-      aliases: { 'King Ebuka': 'User A' },
+      aliases: { 'Bob the Builder': 'User A' },
       aggressiveRedaction: true,
     });
     expect(out).toBe('User A: hi from User A');
@@ -94,7 +98,9 @@ describe('redactMessages', () => {
   });
 
   it('escapes regex special characters in names', () => {
-    const messages = [makeMessage({ originalString: 'Dr. Smith: hello (caller) here' })];
+    const messages = [
+      makeMessage({ originalString: 'Dr. Smith: hello (caller) here' }),
+    ];
     const out = redactMessages(messages, {
       aliases: { 'Dr. Smith': 'User A' },
       aggressiveRedaction: false,
@@ -145,5 +151,31 @@ describe('redactMessages', () => {
       endDate: '2024-12-31',
     });
     expect(out).toBe('User A: x');
+  });
+
+  it('applies PII detectors after name redaction', () => {
+    const messages = [
+      makeMessage({
+        originalString:
+          'Alice: ping me at alice@example.com or +1 555-010-2345',
+      }),
+    ];
+    const out = redactMessages(messages, {
+      aliases: { Alice: 'User A' },
+      aggressiveRedaction: false,
+      pii: { email: true, url: true, phone: true },
+    });
+    expect(out).toBe('User A: ping me at User [EMAIL] or [PHONE]');
+  });
+
+  it('leaves PII alone when pii settings absent', () => {
+    const messages = [
+      makeMessage({ originalString: 'Alice: visit https://x.io' }),
+    ];
+    const out = redactMessages(messages, {
+      aliases: { Alice: 'User A' },
+      aggressiveRedaction: false,
+    });
+    expect(out).toBe('User A: visit https://x.io');
   });
 });

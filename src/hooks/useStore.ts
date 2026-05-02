@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { defaultPiiSettings, type PiiSettings } from '../features/pii';
 
 interface AppSettingsState {
   isDarkMode: boolean;
@@ -14,6 +15,9 @@ interface AppSettingsState {
 
   aggressiveRedaction: boolean;
   toggleAggressiveRedaction: () => void;
+
+  pii: PiiSettings;
+  togglePii: (key: keyof PiiSettings) => void;
 }
 
 export const useAppSettings = create<AppSettingsState>()(
@@ -44,10 +48,22 @@ export const useAppSettings = create<AppSettingsState>()(
       aggressiveRedaction: false,
       toggleAggressiveRedaction: () =>
         set((state) => ({ aggressiveRedaction: !state.aggressiveRedaction })),
+
+      pii: defaultPiiSettings,
+      togglePii: (key) =>
+        set((state) => ({ pii: { ...state.pii, [key]: !state.pii[key] } })),
     }),
     {
       name: 'redactly-settings',
+      version: 1,
       storage: createJSONStorage(() => localStorage),
+      // Persisted shape from prior versions may lack the `pii` field. Fill from defaults.
+      migrate: (persisted) => {
+        const state = persisted as Partial<AppSettingsState> | null;
+        if (!state) return state;
+        if (!state.pii) state.pii = { ...defaultPiiSettings };
+        return state;
+      },
     },
   ),
 );

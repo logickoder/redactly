@@ -49,26 +49,17 @@ Update the Status line under each phase as work moves. Add a one-line **Notes** 
 
 ## Phase 2 — PII Detectors Beyond Names (M)
 
-**Status:** ⚪ Not started
+**Status:** 🟢 Done
 
-**New module:** `src/utils/piiDetectors.ts`.
+**Notes:** New `src/features/pii/` feature folder (types, detectors, core, barrel). Three detectors: email (`[EMAIL]`), URL (`[LINK]`), phone (`[PHONE]`). Apply order email→URL→phone so longer specific patterns mask before phone's loose digit run. Wired into `redactMessages` via optional `pii` field on `RedactionSettings`. Names redacted before PII (per plan trade-off — names in email local-parts still become aliases). Zustand store gains `pii` + `togglePii`, version bumped to 1 with `migrate` filling defaults for older persisted shapes. New "Also Redact" section in `RedactInput` settings (private `PiiToggle` sub-component). 11 new pii tests + 2 redaction integration tests.
 
-Add detectors as togglable rules; user opts in per category. Each detector returns `{ pattern: RegExp, replacement: string | ((m: string) => string) }`.
+- ~~Detector module + replacements.~~ ✅ ([src/features/pii/detectors.ts](src/features/pii/detectors.ts))
+- ~~Apply pipeline post-name-redaction.~~ ✅
+- ~~Zustand store update + migration.~~ ✅
+- ~~UI toggles in RedactInput settings.~~ ✅
+- ~~Tests: per-detector + combined ordering + integration with name redaction.~~ ✅ (13 tests; 37 total)
 
-Detectors:
-- **Phone numbers** — international + local. E.164-ish `\+?\d[\d\s\-().]{7,}\d`. Replacement: `[PHONE]` or last-4 preserve (`***-1234`).
-- **Emails** — RFC-lite `[\w.+-]+@[\w-]+\.[\w.-]+`. Replacement: `[EMAIL]`.
-- **URLs** — `https?://\S+` and bare-domain heuristic. Replacement: `[LINK]`.
-- **Credit-card-shaped numbers** (low priority, future).
-
-UI:
-- New collapsible section in `RedactInput` settings panel: "Also redact". Checkboxes for Phone, Email, URL.
-- Settings persisted via Zustand: `pii: { phone: boolean, email: boolean, url: boolean }`.
-- Update `useStore.ts` schema; bump persist version.
-
-Apply order: PII detectors run **after** name redaction (so a name in an email local-part still becomes alias first, then `[EMAIL]` masks the rest).
-
-**Tests:** fixture per detector + combinations.
+Credit-card detector explicitly deferred per plan (low-priority).
 
 ---
 

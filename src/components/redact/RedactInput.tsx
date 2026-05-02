@@ -2,6 +2,7 @@ import { type FC, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Pencil, RefreshCw, Settings } from 'lucide-react';
 import { useVirtualizedContent } from '../../hooks/useVirtualizedContent.tsx';
+import type { PiiSettings } from '../../features/pii';
 
 interface RedactInputProps {
   content: string;
@@ -13,6 +14,8 @@ interface RedactInputProps {
   setDateFormat: (format: string) => void;
   aggressiveRedaction: boolean;
   toggleAggressiveRedaction: () => void;
+  pii: PiiSettings;
+  togglePii: (key: keyof PiiSettings) => void;
   isParsing: boolean;
   isFromHistory: boolean;
 }
@@ -27,6 +30,8 @@ const RedactInput: FC<RedactInputProps> = ({
   setDateFormat,
   aggressiveRedaction,
   toggleAggressiveRedaction,
+  pii,
+  togglePii,
   isParsing,
   isFromHistory,
 }) => {
@@ -116,9 +121,41 @@ const RedactInput: FC<RedactInputProps> = ({
                     Aggressive Redaction
                   </label>
                   <p className="text-text-muted mt-0.5 text-xs">
-                    Also redacts name parts (e.g. "Ebuka" from "King Ebuka")
+                    Also redacts name parts (e.g. "Bob" from "Bob the Builder")
                     found inside messages.
                   </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-text mb-2 block text-sm font-medium">
+                  Also Redact
+                </p>
+                <p className="text-text-muted mb-2 text-xs">
+                  Mask additional patterns found anywhere in messages.
+                </p>
+                <div className="space-y-2">
+                  <PiiToggle
+                    id="pii-email"
+                    label="Email addresses"
+                    placeholder="[EMAIL]"
+                    checked={pii.email}
+                    onChange={() => togglePii('email')}
+                  />
+                  <PiiToggle
+                    id="pii-url"
+                    label="URLs"
+                    placeholder="[LINK]"
+                    checked={pii.url}
+                    onChange={() => togglePii('url')}
+                  />
+                  <PiiToggle
+                    id="pii-phone"
+                    label="Phone numbers"
+                    placeholder="[PHONE]"
+                    checked={pii.phone}
+                    onChange={() => togglePii('phone')}
+                  />
                 </div>
               </div>
             </div>
@@ -204,5 +241,38 @@ const RedactInput: FC<RedactInputProps> = ({
     </motion.div>
   );
 };
+
+interface PiiToggleProps {
+  id: string;
+  label: string;
+  placeholder: string;
+  checked: boolean;
+  onChange: () => void;
+}
+
+const PiiToggle: FC<PiiToggleProps> = ({
+  id,
+  label,
+  placeholder,
+  checked,
+  onChange,
+}) => (
+  <label htmlFor={id} className="flex cursor-pointer items-center gap-3">
+    <input
+      id={id}
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      className="accent-primary h-4 w-4 cursor-pointer rounded"
+    />
+    <span className="text-text text-sm">{label}</span>
+    <span
+      className="text-primary ml-auto rounded-full px-2 py-0.5 font-mono text-xs"
+      style={{ background: 'rgba(99,102,241,0.1)' }}
+    >
+      {placeholder}
+    </span>
+  </label>
+);
 
 export default RedactInput;
