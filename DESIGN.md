@@ -198,8 +198,8 @@ Never use `rounded-sm` or `rounded-md` for cards — keep the soft, generous loo
 - Header: gradient-tinted icon chip + title left, `X` close button right.
 - Footer: actions right-aligned, `gap-3`. Cancel = ghost, primary = `btn-gradient`.
 - Animation: `initial: { opacity: 0, scale: 0.93, y: 10 }` → `animate: { opacity: 1, scale: 1, y: 0 }`, `duration: 0.2, ease: 'easeOut'`. Wrap in `AnimatePresence`.
-- Reference: [src/components/AddParticipantModal.tsx](src/components/AddParticipantModal.tsx).
-- TODO: focus trap + Escape-to-close are missing today and must be added when modals are touched next.
+- Reference: [src/components/ui/Modal.tsx](src/components/ui/Modal.tsx). Consumers: [src/components/redact/AddParticipantModal.tsx](src/components/redact/AddParticipantModal.tsx), [src/components/redact/SaveChatModal.tsx](src/components/redact/SaveChatModal.tsx).
+- Accessibility: focus trapped while open, `Escape` closes, focus restored on close — all handled by [src/hooks/useFocusTrap.ts](src/hooks/useFocusTrap.ts).
 
 ### 7.11 Toast
 - Implemented in [src/context/ToastContext.tsx](src/context/ToastContext.tsx). Variants: `success`, `error`. Use `toast.show(msg, variant)`.

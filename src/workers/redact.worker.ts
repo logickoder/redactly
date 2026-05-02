@@ -39,6 +39,17 @@ ctx.onmessage = (event: MessageEvent<WorkerRequest>) => {
       ctx.postMessage(response);
       return;
     }
+
+    // Unknown request type: respond with error so caller doesn't hang on the
+    // 30s timeout. Cast through `never` since the discriminated union above
+    // should already be exhaustive.
+    const unknown = req as { id: number; type: string };
+    const response: WorkerResponse = {
+      id: unknown.id,
+      type: 'error',
+      error: `Unknown worker request type: ${unknown.type}`,
+    };
+    ctx.postMessage(response);
   } catch (err) {
     const response: WorkerResponse = {
       id: req.id,

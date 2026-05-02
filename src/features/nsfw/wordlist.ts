@@ -20,8 +20,14 @@ const SLURS_BASE64 = [
 const decodeSlurs = (): string[] =>
   SLURS_BASE64.map((b64) => atob(b64).toLowerCase());
 
-// LDNOOBW conflates profanity + sexual + some slurs. We strip the slur subset out
-// of the general tier so toggling slurs gates the right matches.
+// LDNOOBW is a flat list that mixes profanity + sexual + some slurs. We strip
+// our curated SLURS_BASE64 subset out of the general tier so the slur tier
+// has exclusive jurisdiction over those specific terms.
+//
+// IMPORTANT: many slurs that appear in LDNOOBW are NOT in SLURS_BASE64 and
+// therefore remain in the `general` tier. That means disabling the `slurs`
+// tier alone will still mask many slur-adjacent words via `general`. This is
+// a known limitation; expand SLURS_BASE64 if you need cleaner tier separation.
 const slurSet = new Set(decodeSlurs());
 const generalFromLdnoobw = ldnoobwEnglish.filter((w) => !slurSet.has(w));
 

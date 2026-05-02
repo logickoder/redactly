@@ -17,7 +17,7 @@ Strict rules extracted from the current codebase. New code MUST conform. Deviati
 | Animation | Framer Motion 12 | Use `motion.*` + `AnimatePresence`. No CSS-only transitions for entering/exiting elements. |
 | Icons | `lucide-react` only | No emoji. No font-icon libs. SVG assets in `src/assets/` rendered through `react-svg`. |
 | Virtualization | `@tanstack/react-virtual` | Wrapped in [src/hooks/useVirtualizedContent.tsx](src/hooks/useVirtualizedContent.tsx). |
-| Compression | `pako` (gzip) + base64 | See [src/utils/compression.ts](src/utils/compression.ts). |
+| Compression | `pako` (gzip) + base64 | See [src/features/compression/](src/features/compression/). |
 | PWA | `vite-plugin-pwa` `registerType: 'autoUpdate'` | Manifest in [vite.config.ts](vite.config.ts). |
 
 Adding a new dependency requires: (a) a justification in PR description, (b) confirmation it ships <50KB gzipped, (c) confirmation it works offline.
@@ -53,7 +53,7 @@ src/                       Application code only. Ships in the production bundle
     <feature>/<group>/     Subgroups within a feature (e.g. redact/settings/).
   features/<name>/         Feature-scoped logic modules. Pure-ish; no React UI.
                            Each is a folder with an index.ts barrel export.
-                           Current features: chat, redaction, compression, pii, nsfw.
+                           Current features: chat, redaction, compression, pii, nsfw, analytics.
   lib/                     Cross-cutting low-level helpers (regex, math, type guards).
                            Flat files, NOT folders. No barrel.
   hooks/                   Reusable hooks + Zustand stores. File name MUST start with `use`.
@@ -128,7 +128,7 @@ tests/                     Test code + fixtures. NEVER ships in production bundl
 - Refs (`useRef`) for: timers, debounce handles, "did I init" flags, DOM refs. Never as a workaround for missing dependency arrays.
 
 ### 4.2 Effects
-- All side-effecting code (DOM writes, subscriptions, timers, async kicks) goes in `useEffect`. **Do not mutate state during render.** ([src/pages/Redact.tsx:202-211](src/pages/Redact.tsx#L202-L211) is a known violation slated for fix.)
+- All side-effecting code (DOM writes, subscriptions, timers, async kicks) goes in `useEffect`. **Do not mutate state during render.**
 - Always clean up timers/subscriptions inside the returned cleanup function. Existing precedent: [src/pages/Redact.tsx:191-200](src/pages/Redact.tsx#L191-L200).
 - No empty-deps `useEffect` for "run once" logic that depends on a value — restructure instead.
 
@@ -236,7 +236,7 @@ When extracting:
 ### 9a.4 Known extraction debts
 
 These exist as duplicates today and MUST be consolidated when next touched:
-- ~~Modal shell — backdrop, card, top accent strip, animation. Currently inlined in `AddParticipantModal`. Extract to `src/components/Modal.tsx` when adding any new modal.~~ ✅ Extracted to [src/components/Modal.tsx](src/components/Modal.tsx) with [src/hooks/useFocusTrap.ts](src/hooks/useFocusTrap.ts). Both `SaveChatModal` and `AddParticipantModal` consume it.
+- ~~Modal shell — backdrop, card, top accent strip, animation. Currently inlined in `AddParticipantModal`. Extract to `src/components/ui/Modal.tsx` when adding any new modal.~~ ✅ Extracted to [src/components/ui/Modal.tsx](src/components/ui/Modal.tsx) with [src/hooks/useFocusTrap.ts](src/hooks/useFocusTrap.ts). Both [SaveChatModal](src/components/redact/SaveChatModal.tsx) and [AddParticipantModal](src/components/redact/AddParticipantModal.tsx) consume it.
 - Section header (eyebrow + icon chip) — `SectionHeader` is currently private to [src/components/redact/RedactConfiguration.tsx:18](src/components/redact/RedactConfiguration.tsx#L18). Promote to `src/components/SectionHeader.tsx` on next reuse.
 - Virtualized monospace panel — repeated structurally in `RedactInput` step ≥1 view and `RedactPreview`. Extract to `src/components/VirtualizedTextPanel.tsx` if a third use appears.
 - ~~Regex special-character escape — currently inlined twice in `src/pages/Redact.tsx`. Extract to `escapeRegex(str: string): string`.~~ ✅ Extracted to [src/lib/regex.ts](src/lib/regex.ts).

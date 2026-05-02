@@ -52,14 +52,28 @@ const compileRules = (
   return { regex, lookup };
 };
 
+// Parse a "YYYY-MM-DD" string as a LOCAL-time date. Plain `new Date(str)` would
+// treat it as UTC, which mismatches msg.date (built with new Date(y, m, d) =
+// local) and shifts the boundary by a day in non-UTC timezones.
+const parseLocalDate = (
+  iso: string,
+  endOfDay: boolean,
+): Date | null => {
+  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(iso);
+  if (!m) return null;
+  const [, y, mo, d] = m;
+  const date = new Date(Number(y), Number(mo) - 1, Number(d));
+  if (endOfDay) date.setHours(23, 59, 59, 999);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 const filterByDate = (
   messages: Message[],
   startDate?: string,
   endDate?: string,
 ): Message[] => {
-  const start = startDate ? new Date(startDate) : null;
-  const end = endDate ? new Date(endDate) : null;
-  if (end) end.setHours(23, 59, 59, 999);
+  const start = startDate ? parseLocalDate(startDate, false) : null;
+  const end = endDate ? parseLocalDate(endDate, true) : null;
 
   return messages.filter((msg) => {
     if (!msg.date) return true;
