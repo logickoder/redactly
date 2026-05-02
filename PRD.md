@@ -41,6 +41,9 @@ redacting names and filtering conversations by date.
 | **FS-12** | Persist name-to-alias mappings across sessions for repeat contacts.                                     | Medium   |
 | **FS-13** | Paste raw chat text directly without uploading a file.                                                  | Medium   |
 | **FS-14** | Edit chat content (paste box) before parsing, for new chats only.                                       | Low      |
+| **FS-15** | Mask non-name PII (emails, URLs, phone numbers) per-category toggle.                                    | **High** |
+| **FS-16** | NSFW content filter (general profanity + sexual / slurs / graphic violence) so downstream LLMs accept the chat. | **High** |
+| **FS-17** | Run parsing + redaction off the main thread so the UI stays responsive on large chats (>1MB).           | Medium   |
 
 ## **3. Technical Requirements**
 
@@ -55,8 +58,22 @@ redacting names and filtering conversations by date.
 ### 3.2 Data Handling
 
 * **Input:** WhatsApp .txt export via FileReader or direct paste.
-* **Parsing:** Regex identification of \[Timestamp\] Name: Message.
+* **Parsing:** Regex identification of \[Timestamp\] Name: Message. iOS bracketed and Android dash formats supported. System messages dropped; `<This message was edited>` markers stripped.
 * **Output:** Plain Text (.txt).
+* **Off-thread processing:** Parsing + redaction run inside a Web Worker; main thread remains responsive on large chats. Synchronous fallback when Workers are unavailable.
+
+### 3.3 Redaction Pipeline
+
+Applied per message line in this order:
+1. **Names** — case-insensitive, Unicode-aware lookaround boundaries (`(?<![\p{L}\p{N}_])…(?![\p{L}\p{N}_])`), longest-first sort. Aggressive mode also targets name parts ≥3 chars.
+2. **PII** (opt-in per category) — emails (`[EMAIL]`), URLs (`[LINK]`), phone numbers (`[PHONE]`).
+3. **NSFW** (opt-in) — three tiers (general / slurs / graphic violence). Strategies: `mask` (`[REDACTED]`) or `soften` (per-tier replacement). Slurs always emit `[REDACTED-SLUR]`. Leetspeak-aware. User-extensible via extra-words and allowlist.
+
+### 3.4 Wordlist Source
+
+* **NSFW general tier:** Shutterstock LDNOOBW English list (MIT). Bundled at build time via `pnpm gen:wordlist`. No runtime fetch.
+* **Slurs:** curated, base64-encoded in source.
+* **Violence:** curated.
 
 ## **4. Design and UX Specifications**
 

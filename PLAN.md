@@ -162,28 +162,17 @@ NSFW pass shares Worker pipeline (Phase 6). Build regexes once per settings chan
 
 ## Phase 6 — Web Worker Pipeline (M)
 
-**Status:** ⚪ Not started
+**Status:** 🟢 Done
 
-**Goal:** keep main thread responsive on >1MB chats.
-
-- New worker file `src/workers/redactWorker.ts`. Vite supports `?worker` import.
-- Worker exposes: `parse(text, dateFormat)`, `redact(messages, settings)`. Settings include aliases, aggressive flag, PII flags, NSFW config.
-- `Redact.tsx` posts to worker on debounced setting change; receives `{ redactedContent, stats }`.
-- Stats: `{ namesRedacted, phonesRedacted, emailsRedacted, urlsRedacted, nsfwRedacted }` for new badge.
-- Fallback to sync path if `Worker` unavailable.
-
-Trigger threshold: always use worker. Simpler than dual paths.
+**Notes:** New [src/workers/redact.worker.ts](src/workers/redact.worker.ts) — discriminated `WorkerRequest` / `WorkerResponse` protocol with parse + redact handlers. New [src/hooks/useRedactWorker.ts](src/hooks/useRedactWorker.ts) wraps the Worker with id-based callback Map, supports synchronous fallback if `Worker` unavailable (jsdom, very old browsers). `DistributiveOmit` helper preserves discriminated union variants. `Redact.tsx` switched: `handleParse` awaits `worker.parse`, `redactedContent` moved from `useMemo` to `useState` + `useEffect` with cancel flag for race protection. 50ms artificial parse delay removed (worker already off main thread). Stats payload deferred — UI badge can land in a follow-up. 54 tests still green; build emits 16 precache entries (worker bundled).
 
 ---
 
 ## Phase 7 — Polish (S)
 
-**Status:** ⚪ Not started
+**Status:** 🟢 Done
 
-- License: switch repo to MIT (or dual MIT + CC BY 4.0 for docs/assets).
-- README: document NSFW filter behavior + that it ships English-only seed list.
-- PRD update: append §FS-15 (PII detectors) and §FS-16 (NSFW filter).
-- Bump `DB_VERSION` to 4 if any chat-storage shape change required.
+**Notes:** [LICENSE](LICENSE) switched to MIT (was Apache 2.0; README pointed at CC BY 4.0 — mismatch resolved). [README.md](README.md) gains: PII / NSFW filter / Web Worker bullets, dedicated *NSFW Filter Notes* section calling out English-only seed list, LDNOOBW source, build-time-only refresh, allowlist guidance. [PRD.md](PRD.md): three new functional stories — **FS-15** (PII per-category masking), **FS-16** (NSFW tier filter), **FS-17** (off-thread processing). New §3.3 *Redaction Pipeline* documents the layered apply order; §3.4 documents wordlist source. `DB_VERSION` not bumped — no chat-storage schema change.
 
 ---
 

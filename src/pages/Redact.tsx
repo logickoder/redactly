@@ -1,9 +1,9 @@
 import { type FC, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { type Message, parseChat } from '../features/chat';
-import { redactMessages } from '../features/redaction';
+import { type Message } from '../features/chat';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useAppSettings } from '../hooks/useStore';
+import { useRedactWorker } from '../hooks/useRedactWorker';
 import * as chatStorage from '../features/chat';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useToast } from '../context/ToastContext';
@@ -48,26 +48,45 @@ const Redact: FC = () => {
   const aliasDebounceTimer = useRef<number | null>(null);
   const hasInitialized = useRef(false);
 
-  const redactedContent = useMemo(
-    () =>
-      redactMessages(parsedMessages, {
+  const worker = useRedactWorker();
+
+  const [redactedContent, setRedactedContent] = useState<string>('');
+
+  useEffect(() => {
+    let cancelled = false;
+    if (parsedMessages.length === 0) {
+      setRedactedContent('');
+      return;
+    }
+    worker
+      .redact(parsedMessages, {
         aliases: debouncedAliases,
         aggressiveRedaction,
         startDate,
         endDate,
         pii,
         nsfw,
-      }),
-    [
-      parsedMessages,
-      debouncedAliases,
-      startDate,
-      endDate,
-      aggressiveRedaction,
-      pii,
-      nsfw,
-    ],
-  );
+      })
+      .then((out) => {
+        if (!cancelled) setRedactedContent(out);
+      })
+      .catch((err) => {
+        console.error('Redaction failed:', err);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // worker reference is stable across renders; redaction inputs cover the meaningful deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    parsedMessages,
+    debouncedAliases,
+    startDate,
+    endDate,
+    aggressiveRedaction,
+    pii,
+    nsfw,
+  ]);
 
   const steps = useMemo(() => ['Input', 'Configure', 'Export'], []);
 
@@ -78,8 +97,7 @@ const Redact: FC = () => {
   const handleParse = async (text: string) => {
     setIsParsing(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      const result = parseChat(text, dateFormat);
+      const result = await worker.parse(text, dateFormat);
       setParsedMessages(result.messages);
       setParticipants(result.participants);
 
