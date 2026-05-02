@@ -1,4 +1,5 @@
 import type { Message } from '../chat';
+import { applyNsfw } from '../nsfw';
 import { applyPii, isPiiEnabled } from '../pii';
 import { escapeRegex } from '../../lib/regex';
 import type { RedactionSettings } from './types';
@@ -79,6 +80,7 @@ export const redactMessages = (
     settings.aggressiveRedaction,
   );
   const piiEnabled = settings.pii && isPiiEnabled(settings.pii);
+  const nsfwEnabled = settings.nsfw?.enabled ?? false;
 
   const redactNames = (line: string): string =>
     regex
@@ -86,10 +88,12 @@ export const redactMessages = (
       : line;
 
   // Names first so a name appearing inside an email local-part still becomes its
-  // alias before the email pattern masks the surrounding address.
+  // alias before the email pattern masks the surrounding address. NSFW runs last
+  // so name aliases like "User A" are never themselves matched by content filters.
   const transform = (line: string): string => {
     let out = redactNames(line);
     if (piiEnabled) out = applyPii(out, settings.pii!);
+    if (nsfwEnabled) out = applyNsfw(out, settings.nsfw!);
     return out;
   };
 

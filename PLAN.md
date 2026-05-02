@@ -65,7 +65,9 @@ Credit-card detector explicitly deferred per plan (low-priority).
 
 ## Phase 3 — NSFW Filter (M)
 
-**Status:** ⚪ Not started
+**Status:** 🟢 Done
+
+**Notes:** New `src/features/nsfw/` feature: `types.ts`, `wordlist.ts`, `wordlist.generated.ts` (399 entries from Shutterstock LDNOOBW, MIT), `core.ts` (leet-class regex builder, multi-word phrase support, longest-first sort, allowlist + extraWords merge), `index.ts` barrel. Tier model simplified to **3 tiers**: `general` (LDNOOBW minus slurs), `slurs` (base64-curated), `violence` (curated). New `pnpm gen:wordlist` script ([scripts/generate-wordlist.mjs](scripts/generate-wordlist.mjs)) refreshes the generated list at build time — no runtime fetch (PWA stays offline). Strategies: `mask` → `[REDACTED]` (default), `soften` → per-tier (`[expletive]`, `[violent-term]`). Slurs always emit `[REDACTED-SLUR]` regardless of strategy. Leet map covers a/e/i/o/s/t/l/b/g/u; whitespace inside multi-word phrases matches `\s+`. `\b` word boundaries (English-only by design). Wired into `redactMessages` after PII pass. Zustand store: `nsfw` field + 5 setters; persist version 2 with migrate that coerces v1 four-tier shape into v2 three-tier shape. **Settings UI extracted out of `RedactInput` into [`RedactSettings` modal](src/components/redact/settings/RedactSettings.tsx)** triggered by the Settings button — RedactInput now thin and reads no settings props. 18 nsfw tests, 54 total. Build + lint green.
 
 **Goal:** strip/soften sexual + graphic-violent language so downstream LLMs accept the chat without refusing.
 

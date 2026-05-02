@@ -1,6 +1,6 @@
 import { type FC, useId, useMemo, useState } from 'react';
 import { Search, UserPlus } from 'lucide-react';
-import Modal from './Modal';
+import Modal from '../ui/Modal';
 
 interface AddParticipantModalProps {
   isOpen: boolean;

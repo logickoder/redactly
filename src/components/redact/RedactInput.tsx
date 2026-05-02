@@ -1,8 +1,7 @@
-import { type FC, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { type FC } from 'react';
+import { motion } from 'framer-motion';
 import { Pencil, RefreshCw, Settings } from 'lucide-react';
 import { useVirtualizedContent } from '../../hooks/useVirtualizedContent.tsx';
-import type { PiiSettings } from '../../features/pii';
 
 interface RedactInputProps {
   content: string;
@@ -10,12 +9,7 @@ interface RedactInputProps {
   handleParse: (content: string) => void;
   step: number;
   setStep: (step: number) => void;
-  dateFormat: string;
-  setDateFormat: (format: string) => void;
-  aggressiveRedaction: boolean;
-  toggleAggressiveRedaction: () => void;
-  pii: PiiSettings;
-  togglePii: (key: keyof PiiSettings) => void;
+  onOpenSettings: () => void;
   isParsing: boolean;
   isFromHistory: boolean;
 }
@@ -26,17 +20,10 @@ const RedactInput: FC<RedactInputProps> = ({
   handleParse,
   step,
   setStep,
-  dateFormat,
-  setDateFormat,
-  aggressiveRedaction,
-  toggleAggressiveRedaction,
-  pii,
-  togglePii,
+  onOpenSettings,
   isParsing,
   isFromHistory,
 }) => {
-  const [showSettings, setShowSettings] = useState(false);
-
   const { ref, virtualizer, virtualItems, lines, totalSize } =
     useVirtualizedContent(content);
 
@@ -56,14 +43,17 @@ const RedactInput: FC<RedactInputProps> = ({
         </label>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowSettings(!showSettings)}
-            className={`rounded-lg p-2 transition-all ${showSettings ? 'text-primary bg-primary/10' : 'text-text-muted hover:text-primary hover:bg-primary/10'}`}
+            type="button"
+            onClick={onOpenSettings}
+            aria-label="Open redaction settings"
+            className="text-text-muted hover:text-primary hover:bg-primary/10 rounded-lg p-2 transition-all"
             title="Settings"
           >
             <Settings size={16} />
           </button>
           {canEdit && (
             <button
+              type="button"
               onClick={() => setStep(0)}
               className="text-primary hover:bg-primary/10 flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
             >
@@ -73,95 +63,6 @@ const RedactInput: FC<RedactInputProps> = ({
           )}
         </div>
       </div>
-
-      <AnimatePresence>
-        {showSettings && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            <div
-              className="mb-4 space-y-4 rounded-xl border p-4"
-              style={{
-                background: 'rgba(99,102,241,0.05)',
-                borderColor: 'var(--color-border)',
-              }}
-            >
-              <div>
-                <label className="text-text mb-2 block text-sm font-medium">
-                  Date Format
-                </label>
-                <input
-                  type="text"
-                  value={dateFormat}
-                  onChange={(e) => setDateFormat(e.target.value)}
-                  className="input-base w-full"
-                  placeholder="dd/MM/yyyy"
-                />
-                <p className="text-text-muted mt-1.5 text-xs">
-                  Use d, M, y, H, m, s tokens. Example: dd/MM/yyyy or MM/dd/yy
-                </p>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <input
-                  id="aggressive-redaction"
-                  type="checkbox"
-                  checked={aggressiveRedaction}
-                  onChange={toggleAggressiveRedaction}
-                  className="accent-primary mt-0.5 h-4 w-4 cursor-pointer rounded"
-                />
-                <div>
-                  <label
-                    htmlFor="aggressive-redaction"
-                    className="text-text block cursor-pointer text-sm font-medium"
-                  >
-                    Aggressive Redaction
-                  </label>
-                  <p className="text-text-muted mt-0.5 text-xs">
-                    Also redacts name parts (e.g. "Bob" from "Bob the Builder")
-                    found inside messages.
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-text mb-2 block text-sm font-medium">
-                  Also Redact
-                </p>
-                <p className="text-text-muted mb-2 text-xs">
-                  Mask additional patterns found anywhere in messages.
-                </p>
-                <div className="space-y-2">
-                  <PiiToggle
-                    id="pii-email"
-                    label="Email addresses"
-                    placeholder="[EMAIL]"
-                    checked={pii.email}
-                    onChange={() => togglePii('email')}
-                  />
-                  <PiiToggle
-                    id="pii-url"
-                    label="URLs"
-                    placeholder="[LINK]"
-                    checked={pii.url}
-                    onChange={() => togglePii('url')}
-                  />
-                  <PiiToggle
-                    id="pii-phone"
-                    label="Phone numbers"
-                    placeholder="[PHONE]"
-                    checked={pii.phone}
-                    onChange={() => togglePii('phone')}
-                  />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {step === 0 ? (
         <textarea
@@ -213,6 +114,7 @@ const RedactInput: FC<RedactInputProps> = ({
           </div>
           {canEdit && (
             <button
+              type="button"
               onClick={() => setStep(0)}
               className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-xl bg-black/0 opacity-0 transition-all hover:bg-black/10 hover:opacity-100 dark:hover:bg-black/30"
               title="Click to edit content"
@@ -229,6 +131,7 @@ const RedactInput: FC<RedactInputProps> = ({
       {step === 0 && (
         <div className="mt-4 flex justify-end">
           <button
+            type="button"
             onClick={() => handleParse(content)}
             disabled={!content.trim() || isParsing}
             className="btn-gradient flex items-center gap-2"
@@ -241,38 +144,5 @@ const RedactInput: FC<RedactInputProps> = ({
     </motion.div>
   );
 };
-
-interface PiiToggleProps {
-  id: string;
-  label: string;
-  placeholder: string;
-  checked: boolean;
-  onChange: () => void;
-}
-
-const PiiToggle: FC<PiiToggleProps> = ({
-  id,
-  label,
-  placeholder,
-  checked,
-  onChange,
-}) => (
-  <label htmlFor={id} className="flex cursor-pointer items-center gap-3">
-    <input
-      id={id}
-      type="checkbox"
-      checked={checked}
-      onChange={onChange}
-      className="accent-primary h-4 w-4 cursor-pointer rounded"
-    />
-    <span className="text-text text-sm">{label}</span>
-    <span
-      className="text-primary ml-auto rounded-full px-2 py-0.5 font-mono text-xs"
-      style={{ background: 'rgba(99,102,241,0.1)' }}
-    >
-      {placeholder}
-    </span>
-  </label>
-);
 
 export default RedactInput;

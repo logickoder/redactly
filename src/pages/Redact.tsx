@@ -10,21 +10,20 @@ import { useToast } from '../context/ToastContext';
 import RedactInput from '../components/redact/RedactInput';
 import RedactConfiguration from '../components/redact/RedactConfiguration';
 import RedactPreview from '../components/redact/RedactPreview';
-import SaveChatModal from '../components/SaveChatModal';
-import AddParticipantModal from '../components/AddParticipantModal';
+import SaveChatModal from '../components/redact/SaveChatModal';
+import AddParticipantModal from '../components/redact/AddParticipantModal';
+import RedactSettings from '../components/redact/settings/RedactSettings';
 
 const Redact: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const {
     dateFormat,
-    setDateFormat,
     nameMap,
     updateNameMap,
     aggressiveRedaction,
-    toggleAggressiveRedaction,
     pii,
-    togglePii,
+    nsfw,
   } = useAppSettings();
   const toast = useToast();
 
@@ -44,6 +43,7 @@ const Redact: FC = () => {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [defaultChatName, setDefaultChatName] = useState('');
   const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const aliasDebounceTimer = useRef<number | null>(null);
   const hasInitialized = useRef(false);
@@ -56,6 +56,7 @@ const Redact: FC = () => {
         startDate,
         endDate,
         pii,
+        nsfw,
       }),
     [
       parsedMessages,
@@ -64,6 +65,7 @@ const Redact: FC = () => {
       endDate,
       aggressiveRedaction,
       pii,
+      nsfw,
     ],
   );
 
@@ -260,12 +262,7 @@ const Redact: FC = () => {
             handleParse={handleParse}
             step={step}
             setStep={setStep}
-            dateFormat={dateFormat}
-            setDateFormat={setDateFormat}
-            aggressiveRedaction={aggressiveRedaction}
-            toggleAggressiveRedaction={toggleAggressiveRedaction}
-            pii={pii}
-            togglePii={togglePii}
+            onOpenSettings={() => setIsSettingsOpen(true)}
             isParsing={isParsing}
             isFromHistory={isFromHistory}
           />
@@ -316,6 +313,11 @@ const Redact: FC = () => {
         nameMap={nameMap}
         existingParticipants={participants}
         nextAliasLabel={nextAliasLabel}
+      />
+
+      <RedactSettings
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
       />
     </motion.div>
   );

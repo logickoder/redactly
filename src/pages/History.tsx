@@ -4,7 +4,7 @@ import * as chatStorage from '../features/chat';
 import { type ChatPreview } from '../features/chat';
 import { ArrowRight, Clock, FileText, Trash2 } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
-import PageHeader from '../components/PageHeader';
+import PageHeader from '../components/ui/PageHeader';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },

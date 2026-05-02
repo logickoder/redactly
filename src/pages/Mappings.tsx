@@ -2,7 +2,7 @@ import { type FC, useCallback, useMemo, useState } from 'react';
 import { useAppSettings } from '../hooks/useStore';
 import { Edit2, Save, Search, Trash2, Users, X } from 'lucide-react';
 import { motion } from 'framer-motion';
-import PageHeader from '../components/PageHeader';
+import PageHeader from '../components/ui/PageHeader';
 
 const Mappings: FC = () => {
   const { nameMap, updateNameMap, deleteNameMapping } = useAppSettings();

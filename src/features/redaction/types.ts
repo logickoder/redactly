@@ -1,3 +1,4 @@
+import type { NsfwSettings } from '../nsfw';
 import type { PiiSettings } from '../pii';
 
 export interface RedactionSettings {
@@ -6,4 +7,5 @@ export interface RedactionSettings {
   startDate?: string;
   endDate?: string;
   pii?: PiiSettings;
+  nsfw?: NsfwSettings;
 }

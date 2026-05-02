@@ -1,7 +1,7 @@
 import { type FC, type ReactNode, useId, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
-import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface ModalProps {
   isOpen: boolean;

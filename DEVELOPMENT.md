@@ -44,11 +44,14 @@ src/                       Application code only. Ships in the production bundle
   main.tsx                 Entry. Mounts <App />.
   index.css                Tailwind import + theme tokens + utility classes.
   pages/                   Route components only (Home, Redact, History, Mappings, Feedback).
-  components/              Shared UI components (used by ≥2 pages).
-  components/<feature>/    Feature-scoped UI components (e.g. components/redact/).
+  components/              UI components, organized into three buckets:
+    layout/                App shell pieces (Layout, SEO, ScrollToTop).
+    ui/                    Reusable UI primitives (Modal, Toast, PageHeader).
+    <feature>/             Feature-scoped components (e.g. redact/).
+    <feature>/<group>/     Subgroups within a feature (e.g. redact/settings/).
   features/<name>/         Feature-scoped logic modules. Pure-ish; no React UI.
                            Each is a folder with an index.ts barrel export.
-                           Current features: chat, redaction, compression.
+                           Current features: chat, redaction, compression, pii, nsfw.
   lib/                     Cross-cutting low-level helpers (regex, math, type guards).
                            Flat files, NOT folders. No barrel.
   hooks/                   Reusable hooks + Zustand stores. File name MUST start with `use`.
@@ -82,11 +85,15 @@ tests/                     Test code + fixtures. NEVER ships in production bundl
 - Flat single-purpose files only (e.g. `regex.ts`). No subfolders, no barrel.
 - Pure utilities with no domain knowledge. If logic carries domain meaning, it belongs in `features/`, not `lib/`.
 
-**Component folders (`src/components/` and `src/components/<feature>/`):**
-- A component used in only one page lives under `components/<page-name>/`.
-- A component used in two or more pages lives in `components/`.
-- One default export per component file. Helper components in the same file are fine if private (see `NavIcon` in [src/components/Layout.tsx:113](src/components/Layout.tsx#L113), `SectionHeader` in [src/components/redact/RedactConfiguration.tsx:18](src/components/redact/RedactConfiguration.tsx#L18)).
+**Component folders:**
+- `components/layout/` — pieces of the app shell (header, footer, page wrapper, SEO, scroll restorers). Used by the router root only.
+- `components/ui/` — reusable presentational primitives that are agnostic of any one feature (Modal, Toast, PageHeader, future Button/Badge/etc.). New primitives go here when they're used across two or more features OR when they're a stateless wrapper others compose.
+- `components/<feature>/` — components scoped to one feature (only consumed by that feature's page). Includes feature-specific modals.
+- `components/<feature>/<group>/` — when a feature accumulates components serving a sub-concern (e.g. `redact/settings/`), nest them. Don't nest beyond two levels deep.
+- One default export per component file. Helper components in the same file are fine if private (see `NavIcon` in [src/components/layout/Layout.tsx](src/components/layout/Layout.tsx), `SectionHeader` in [src/components/redact/RedactConfiguration.tsx](src/components/redact/RedactConfiguration.tsx)).
 - Components do NOT have a barrel — import each component directly by its file path.
+
+**Promotion rule:** a feature-scoped component that gains a second consumer outside its feature graduates to `components/ui/`. Don't shortcut by adding cross-feature imports.
 
 **Strict separation of concerns:**
 - `src/` is application code only. **No `*.test.ts(x)` files in `src/`.** No fixtures, no test scaffolding.

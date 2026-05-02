@@ -1,6 +1,6 @@
 import { type FC, useState } from 'react';
 import { Save } from 'lucide-react';
-import Modal from './Modal';
+import Modal from '../ui/Modal';
 
 interface SaveChatModalProps {
   isOpen: boolean;

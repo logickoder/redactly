@@ -1,5 +1,5 @@
 import { HashRouter, Route, Routes } from 'react-router-dom';
-import Layout from './components/Layout';
+import Layout from './components/layout/Layout';
 import Home from './pages/Home';
 import Redact from './pages/Redact';
 import History from './pages/History';
@@ -7,7 +7,7 @@ import Mappings from './pages/Mappings';
 import Feedback from './pages/Feedback';
 import { ToastProvider } from './context/ToastContext';
 import type { FC } from 'react';
-import ScrollToTop from './components/ScrollToTop.tsx';
+import ScrollToTop from './components/layout/ScrollToTop';
 
 const App: FC = () => {
   return (

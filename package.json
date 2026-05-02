@@ -12,7 +12,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui",
-    "generate-pwa-assets": "pwa-assets-generator"
+    "generate-pwa-assets": "pwa-assets-generator",
+    "gen:wordlist": "node scripts/generate-wordlist.mjs"
   },
   "dependencies": {
     "@tanstack/react-virtual": "^3.13.18",

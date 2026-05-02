@@ -1,7 +1,7 @@
 import React, { type FC, useEffect } from 'react';
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { AlertCircle, CheckCircle, Info, X } from 'lucide-react';
-import type { ToastMessage } from '../context/ToastContext';
+import type { ToastMessage } from '../../context/ToastContext';
 
 interface ToastProps {
   toast: ToastMessage;

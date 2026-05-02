@@ -1,10 +1,10 @@
 import { type FC, type ReactNode, useEffect } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import { History, Lock, MessageSquare, Moon, Sun, Users } from 'lucide-react';
-import Github from '../assets/github.svg';
-import Twitter from '../assets/x.svg';
+import Github from '../../assets/github.svg';
+import Twitter from '../../assets/x.svg';
 import { ReactSVG } from 'react-svg';
-import { useAppSettings } from '../hooks/useStore.ts';
+import { useAppSettings } from '../../hooks/useStore';
 import SEO from './SEO';
 
 const Layout: FC = () => {
